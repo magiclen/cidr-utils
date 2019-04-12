@@ -1,0 +1,292 @@
+use std::net::Ipv4Addr;
+use std::mem::transmute;
+use std::fmt::{self, Formatter, Display};
+
+use regex::Regex;
+use std::cmp::Ordering;
+
+lazy_static! {
+    static ref RE_IPV4_CIDR: Regex = {
+        Regex::new(r"^((25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9]))?)?)?)(/((([0-9]|30|31|32)|([1-2][0-9]))|(((25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])))))?$").unwrap()
+    };
+}
+
+#[inline]
+fn get_mask(bits: u8) -> u32 {
+    let mut a = [0u8; 4];
+
+    let l = (bits / 8) as usize;
+
+    for i in 0..l {
+        a[i] = 255;
+    }
+
+    let d = bits % 8;
+
+    if d > 0 {
+        a[l] = 0xFF << (8 - d);
+    }
+
+    unsafe {
+        transmute(a)
+    }
+}
+
+#[inline]
+fn u32_to_u8_array(uint32: u32) -> [u8; 4] {
+    unsafe { transmute(uint32) }
+}
+
+#[inline]
+fn u8_array_to_u32(uint8_array: [u8; 4]) -> u32 {
+    unsafe { transmute(uint8_array) }
+}
+
+#[inline]
+fn mask_to_bits(mask: u32) -> Option<u8> {
+    let mut digit = 0;
+    let mut b = 32u8;
+
+    for _ in 0..32 {
+        let base = (3 - digit / 8) * 8;
+        let offset = digit % 8;
+        let index = base + offset;
+
+        let n = (mask << index) >> 31;
+
+        digit += 1;
+
+        if n == 0 {
+            b = (digit - 1) as u8;
+            break;
+        }
+    }
+
+    for digit in digit..32 {
+        let base = (3 - digit / 8) * 8;
+        let offset = digit % 8;
+        let index = base + offset;
+
+        if mask << index >> 31 == 1 {
+            return None;
+        }
+    }
+
+    Some(b)
+}
+
+pub trait Ipv4Able {
+    #[inline]
+    fn get_u32(&self) -> u32;
+}
+
+impl Ipv4Able for u32 {
+    #[inline]
+    fn get_u32(&self) -> u32 {
+        *self
+    }
+}
+
+impl Ipv4Able for [u8; 4] {
+    #[inline]
+    fn get_u32(&self) -> u32 {
+        u8_array_to_u32(*self)
+    }
+}
+
+impl Ipv4Able for Ipv4Addr {
+    #[inline]
+    fn get_u32(&self) -> u32 {
+        self.octets().get_u32()
+    }
+}
+
+impl<T: Ipv4Able> Ipv4Able for &T {
+    #[inline]
+    fn get_u32(&self) -> u32 {
+        Ipv4Able::get_u32(*self)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct Ipv4Cidr {
+    prefix: u32,
+    mask: u32,
+}
+
+impl Display for Ipv4Cidr {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        let a: [u8; 4] = u32_to_u8_array(self.prefix);
+
+        f.write_fmt(format_args!("{}.{}.{}.{}/{}", a[0], a[1], a[2], a[3], mask_to_bits(self.mask).unwrap()))
+    }
+}
+
+impl PartialOrd for Ipv4Cidr {
+    fn partial_cmp(&self, other: &Ipv4Cidr) -> Option<Ordering> {
+        let a = self.first_as_u8_array();
+        let b = other.first_as_u8_array();
+
+        for i in 0..4 {
+            if a[i] > b[i] {
+                return Some(Ordering::Greater);
+            } else if a[i] < b[i] {
+                return Some(Ordering::Less);
+            }
+        }
+
+        other.get_bits().partial_cmp(&self.get_bits())
+    }
+}
+
+impl Ipv4Cidr {
+    #[inline]
+    pub fn get_prefix(&self) -> u32 {
+        self.prefix
+    }
+
+    #[inline]
+    pub fn get_prefix_as_u8_array(&self) -> [u8; 4] {
+        u32_to_u8_array(self.get_prefix())
+    }
+
+    #[inline]
+    pub fn get_prefix_as_ipv4_addr(&self) -> Ipv4Addr {
+        let a = self.get_prefix_as_u8_array();
+
+        Ipv4Addr::new(a[0], a[1], a[2], a[3])
+    }
+
+    #[inline]
+    pub fn get_bits(&self) -> u8 {
+        mask_to_bits(self.mask).unwrap()
+    }
+
+    #[inline]
+    pub fn get_mask(&self) -> u32 {
+        get_mask(self.get_bits())
+    }
+
+    #[inline]
+    pub fn get_mask_as_u8_array(&self) -> [u8; 4] {
+        u32_to_u8_array(self.get_mask())
+    }
+
+    #[inline]
+    pub fn get_mask_as_ipv4_addr(&self) -> Ipv4Addr {
+        let a = self.get_mask_as_u8_array();
+
+        Ipv4Addr::new(a[0], a[1], a[2], a[3])
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Ipv4CidrError {
+    IncorrectBitsRange,
+    IncorrectMask,
+    IncorrectIpv4CIDRString,
+}
+
+impl Ipv4Cidr {
+    pub fn from_prefix_and_bits<P: Ipv4Able>(prefix: P, bits: u8) -> Result<Ipv4Cidr, Ipv4CidrError> {
+        if bits > 32 {
+            return Err(Ipv4CidrError::IncorrectBitsRange);
+        }
+
+        let mask = get_mask(bits);
+
+        let prefix = prefix.get_u32() & mask;
+
+        Ok(Ipv4Cidr {
+            prefix,
+            mask,
+        })
+    }
+
+    pub fn from_prefix_and_mask<P: Ipv4Able, M: Ipv4Able>(prefix: P, mask: M) -> Result<Ipv4Cidr, Ipv4CidrError> {
+        let mask = mask.get_u32();
+
+        match mask_to_bits(mask) {
+            Some(_) => {
+                let prefix = prefix.get_u32() & mask;
+
+                Ok(Ipv4Cidr {
+                    prefix,
+                    mask,
+                })
+            }
+            None => {
+                Err(Ipv4CidrError::IncorrectMask)
+            }
+        }
+    }
+
+    pub fn from_str<S: AsRef<str>>(s: S) -> Result<Ipv4Cidr, Ipv4CidrError> {
+        let s = s.as_ref();
+
+        match RE_IPV4_CIDR.captures(s) {
+            Some(c) => {
+                let mut prefix = [0u8; 4];
+
+                prefix[0] = c.get(2).unwrap().as_str().parse().unwrap();
+                prefix[1] = c.get(5).map(|m| m.as_str().parse().unwrap()).unwrap_or(0);
+                prefix[2] = c.get(8).map(|m| m.as_str().parse().unwrap()).unwrap_or(0);
+                prefix[3] = c.get(11).map(|m| m.as_str().parse().unwrap()).unwrap_or(0);
+
+                if let Some(_) = c.get(13) {
+                    if let Some(m) = c.get(15) {
+                        Ok(Ipv4Cidr::from_prefix_and_bits(prefix, m.as_str().parse().unwrap())?)
+                    } else {
+                        let mut mask = [0u8; 4];
+
+                        mask[0] = c.get(20).unwrap().as_str().parse().unwrap();
+                        mask[1] = c.get(22).unwrap().as_str().parse().unwrap();
+                        mask[2] = c.get(24).unwrap().as_str().parse().unwrap();
+                        mask[3] = c.get(26).unwrap().as_str().parse().unwrap();
+
+                        Ok(Ipv4Cidr::from_prefix_and_mask(prefix, mask)?)
+                    }
+                } else {
+                    Ok(Ipv4Cidr::from_prefix_and_bits(prefix, 32)?)
+                }
+            }
+            None => {
+                Err(Ipv4CidrError::IncorrectIpv4CIDRString)
+            }
+        }
+    }
+}
+
+impl Ipv4Cidr {
+    #[inline]
+    pub fn first(&self) -> u32 {
+        self.get_prefix()
+    }
+
+    #[inline]
+    pub fn first_as_u8_array(&self) -> [u8; 4] {
+        self.get_prefix_as_u8_array()
+    }
+
+    #[inline]
+    pub fn first_as_ipv4_addr(&self) -> Ipv4Addr {
+        self.get_prefix_as_ipv4_addr()
+    }
+
+    #[inline]
+    pub fn last(&self) -> u32 {
+        !self.get_mask() | self.get_prefix()
+    }
+
+    #[inline]
+    pub fn last_as_u8_array(&self) -> [u8; 4] {
+        u32_to_u8_array(self.last())
+    }
+
+    #[inline]
+    pub fn last_as_ipv4_addr(&self) -> Ipv4Addr {
+        let a = self.last_as_u8_array();
+
+        Ipv4Addr::new(a[0], a[1], a[2], a[3])
+    }
+}
