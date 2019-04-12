@@ -86,3 +86,30 @@ fn compare() {
     assert_eq!(Ordering::Equal, cidr_5.partial_cmp(&cidr_6).unwrap());
     assert_eq!(Ordering::Greater, cidr_5.partial_cmp(&cidr_7).unwrap());
 }
+
+#[test]
+fn contains() {
+    let cidr_1 = Ipv4Cidr::from_str("192.168.51.1/16").unwrap();
+    let cidr_2 = Ipv4Cidr::from_str("192.168.43.1/17").unwrap();
+
+    assert_eq!(false, cidr_1.contains([127, 0, 0, 1]));
+    assert_eq!(false, cidr_1.contains([192, 167, 0, 0]));
+    assert_eq!(true, cidr_1.contains([192, 168, 0, 0]));
+    assert_eq!(true, cidr_1.contains([192, 168, 51, 0]));
+    assert_eq!(true, cidr_1.contains([192, 168, 255, 255]));
+    assert_eq!(false, cidr_1.contains([192, 169, 0, 0]));
+    assert_eq!(true, cidr_2.contains([192, 168, 127, 255]));
+    assert_eq!(false, cidr_2.contains([192, 168, 128, 0]));
+}
+
+#[test]
+fn iter_as_ipv4_addr() {
+    let cidr = Ipv4Cidr::from_str("192.168.51.1/16").unwrap();
+
+    let mut iter = cidr.iter_as_ipv4_addr();
+
+    assert_eq!(Ipv4Addr::new(192, 168, 0, 0), iter.next().unwrap());
+    assert_eq!(Ipv4Addr::new(192, 168, 0, 1), iter.next().unwrap());
+    assert_eq!(Ipv4Addr::new(192, 168, 0, 2), iter.next().unwrap());
+    assert_eq!(Ipv4Addr::new(192, 168, 255, 255), iter.last().unwrap());
+}

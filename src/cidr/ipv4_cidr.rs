@@ -11,6 +11,8 @@ lazy_static! {
     };
 }
 
+// TODO: Functions
+
 #[inline]
 fn get_mask(bits: u8) -> u32 {
     let mut a = [0u8; 4];
@@ -75,6 +77,8 @@ fn mask_to_bits(mask: u32) -> Option<u8> {
     Some(b)
 }
 
+// TODO: Ipv4Able
+/// The type which can be token as an IPv4 address.
 pub trait Ipv4Able {
     #[inline]
     fn get_u32(&self) -> u32;
@@ -108,6 +112,9 @@ impl<T: Ipv4Able> Ipv4Able for &T {
     }
 }
 
+// TODO: Ipv4Cidr
+
+/// To represent IPv4 CIDR.
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Ipv4Cidr {
     prefix: u32,
@@ -181,6 +188,7 @@ impl Ipv4Cidr {
 }
 
 #[derive(Debug, PartialEq)]
+/// Possible errors of `Ipv4Cidr`.
 pub enum Ipv4CidrError {
     IncorrectBitsRange,
     IncorrectMask,
@@ -288,5 +296,136 @@ impl Ipv4Cidr {
         let a = self.last_as_u8_array();
 
         Ipv4Addr::new(a[0], a[1], a[2], a[3])
+    }
+
+    #[inline]
+    pub fn size(&self) -> u64 {
+        2u64.pow((32 - self.get_bits()) as u32)
+    }
+}
+
+impl Ipv4Cidr {
+    #[inline]
+    pub fn contains<IP: Ipv4Able>(&self, ipv4: IP) -> bool {
+        let mask = self.get_mask();
+
+        ipv4.get_u32() & mask == self.prefix
+    }
+}
+
+// TODO: Ipv4CidrU8ArrayIterator
+
+/// To iterate IPv4 CIDR.
+#[derive(Debug)]
+pub struct Ipv4CidrU8ArrayIterator {
+    rev_from: u32,
+    next: u64,
+    size: u64,
+}
+
+impl Iterator for Ipv4CidrU8ArrayIterator {
+    type Item = [u8; 4];
+
+    #[inline]
+    fn next(&mut self) -> Option<[u8; 4]> {
+        if self.next == self.size {
+            None
+        } else {
+            let p = self.rev_from + self.next as u32;
+
+            self.next += 1;
+
+            let a = u32_to_u8_array(p);
+
+            Some([a[3], a[2], a[1], a[0]])
+        }
+    }
+
+    #[inline]
+    fn last(mut self) -> Option<[u8; 4]> {
+        self.next = self.size - 1;
+
+        self.next()
+    }
+}
+
+impl Ipv4Cidr {
+    #[inline]
+    pub fn iter_as_u8_array(&self) -> Ipv4CidrU8ArrayIterator {
+        let a = u32_to_u8_array(self.prefix);
+
+        let rev_from = u8_array_to_u32([a[3], a[2], a[1], a[0]]);
+
+        Ipv4CidrU8ArrayIterator {
+            rev_from,
+            next: 0,
+            size: self.size(),
+        }
+    }
+}
+
+// TODO: Ipv4CidrIterator
+
+/// To iterate IPv4 CIDR.
+#[derive(Debug)]
+pub struct Ipv4CidrIterator {
+    iter: Ipv4CidrU8ArrayIterator
+}
+
+impl Iterator for Ipv4CidrIterator {
+    type Item = u32;
+
+    #[inline]
+    fn next(&mut self) -> Option<u32> {
+        self.iter.next().map(|a| u8_array_to_u32(a))
+    }
+
+    #[inline]
+    fn last(self) -> Option<u32> {
+        self.iter.last().map(|a| u8_array_to_u32(a))
+    }
+}
+
+impl Ipv4Cidr {
+    #[inline]
+    pub fn iter(&self) -> Ipv4CidrIterator {
+        let iter = self.iter_as_u8_array();
+
+        Ipv4CidrIterator {
+            iter
+        }
+    }
+}
+
+// TODO: Ipv4CidrIpv4AddrIterator
+
+/// To iterate IPv4 CIDR.
+#[derive(Debug)]
+pub struct Ipv4CidrIpv4AddrIterator {
+    iter: Ipv4CidrU8ArrayIterator
+}
+
+impl Iterator for Ipv4CidrIpv4AddrIterator {
+    type Item = Ipv4Addr;
+
+    #[inline]
+    fn next(&mut self) -> Option<Ipv4Addr> {
+        self.iter.next().map(|a| Ipv4Addr::new(a[0], a[1], a[2], a[3]))
+    }
+
+    #[inline]
+    fn last(self) -> Option<Ipv4Addr> {
+        self.iter.last().map(|a| Ipv4Addr::new(a[0], a[1], a[2], a[3]))
+    }
+}
+
+impl Ipv4Cidr {
+    #[inline]
+    pub fn iter_as_ipv4_addr(&self) -> Ipv4CidrIpv4AddrIterator {
+        let iter = self.iter_as_u8_array();
+
+        Ipv4CidrIpv4AddrIterator {
+            iter
+        }
     }
 }
