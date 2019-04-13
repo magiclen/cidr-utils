@@ -1,21 +1,21 @@
-use crate::cidr::{Ipv4Cidr, Ipv4Able};
+use crate::cidr::{Ipv6Cidr, Ipv6Able};
 use std::ops::Deref;
 use std::fmt::{self, Formatter, Debug, Display};
 use core::fmt::Write;
 
-/// To combine multiple Ipv4 CIDRs to supernetworks.
-pub struct Ipv4CidrCombiner {
-    cidr_array: Vec<Ipv4Cidr>
+/// To combine multiple Ipv6 CIDRs to supernetworks.
+pub struct Ipv6CidrCombiner {
+    cidr_array: Vec<Ipv6Cidr>
 }
 
-impl Debug for Ipv4CidrCombiner {
+impl Debug for Ipv6CidrCombiner {
     #[inline]
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         Debug::fmt(&self.cidr_array, f)
     }
 }
 
-impl Display for Ipv4CidrCombiner {
+impl Display for Ipv6CidrCombiner {
     #[inline]
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         f.write_char('[')?;
@@ -32,36 +32,36 @@ impl Display for Ipv4CidrCombiner {
     }
 }
 
-impl Deref for Ipv4CidrCombiner {
-    type Target = Vec<Ipv4Cidr>;
+impl Deref for Ipv6CidrCombiner {
+    type Target = Vec<Ipv6Cidr>;
 
     #[inline]
-    fn deref(&self) -> &Vec<Ipv4Cidr> {
+    fn deref(&self) -> &Vec<Ipv6Cidr> {
         &self.cidr_array
     }
 }
 
-impl Ipv4CidrCombiner {
+impl Ipv6CidrCombiner {
     #[inline]
-    /// Create a new `Ipv4CidrCombiner` instance.
-    pub fn new() -> Ipv4CidrCombiner {
-        Ipv4CidrCombiner {
+    /// Create a new `Ipv6CidrCombiner` instance.
+    pub fn new() -> Ipv6CidrCombiner {
+        Ipv6CidrCombiner {
             cidr_array: Vec::new()
         }
     }
 
     #[inline]
-    /// Create a new `Ipv4CidrCombiner` instance with a specific capacity.
-    pub fn with_capacity(capacity: usize) -> Ipv4CidrCombiner {
-        Ipv4CidrCombiner {
+    /// Create a new `Ipv6CidrCombiner` instance with a specific capacity.
+    pub fn with_capacity(capacity: usize) -> Ipv6CidrCombiner {
+        Ipv6CidrCombiner {
             cidr_array: Vec::with_capacity(capacity)
         }
     }
 }
 
-impl Ipv4CidrCombiner {
+impl Ipv6CidrCombiner {
     /// Push a CIDR into this combiner.
-    pub fn push(&mut self, mut cidr: Ipv4Cidr) {
+    pub fn push(&mut self, mut cidr: Ipv6Cidr) {
         if let Err(mut index) = self.cidr_array.binary_search(&cidr) {
             if self.cidr_array.is_empty() {
                 self.cidr_array.push(cidr);
@@ -107,7 +107,7 @@ impl Ipv4CidrCombiner {
                                 let d = next_prefix ^ prefix;
 
                                 if d == 1 << ((bits - 1) / 8) * 8 + 7 >> ((bits - 1) % 8) {
-                                    cidr = Ipv4Cidr::from_prefix_and_bits(prefix, bits - 1).unwrap();
+                                    cidr = Ipv6Cidr::from_prefix_and_bits(prefix, bits - 1).unwrap();
 
                                     self.cidr_array.remove(index);
 
@@ -135,7 +135,7 @@ impl Ipv4CidrCombiner {
 
                                     index = index_dec;
 
-                                    cidr = Ipv4Cidr::from_prefix_and_bits(previous_prefix, previous_bits - 1).unwrap();
+                                    cidr = Ipv6Cidr::from_prefix_and_bits(previous_prefix, previous_bits - 1).unwrap();
 
                                     merging = true;
                                 }
@@ -150,10 +150,10 @@ impl Ipv4CidrCombiner {
     }
 
     #[inline]
-    /// Check an Ipv4 whether it is in these CIDRs.
-    pub fn contains<IP: Ipv4Able>(&self, ipv4: IP) -> bool {
+    /// Check an Ipv6 whether it is in these CIDRs.
+    pub fn contains<IP: Ipv6Able>(&self, ipv6: IP) -> bool {
         for cidr in self.cidr_array.iter() {
-            if cidr.contains(&ipv4) {
+            if cidr.contains(&ipv6) {
                 return true;
             }
         }
