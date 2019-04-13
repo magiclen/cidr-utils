@@ -78,7 +78,7 @@ fn mask_to_bits(mask: u32) -> Option<u8> {
 }
 
 // TODO: Ipv4Able
-/// The type which can be token as an IPv4 address.
+/// The type which can be taken as an IPv4 address.
 pub trait Ipv4Able {
     #[inline]
     fn get_u32(&self) -> u32;
@@ -115,7 +115,7 @@ impl<T: Ipv4Able> Ipv4Able for &T {
 // TODO: Ipv4Cidr
 
 /// To represent IPv4 CIDR.
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct Ipv4Cidr {
     prefix: u32,
     mask: u32,

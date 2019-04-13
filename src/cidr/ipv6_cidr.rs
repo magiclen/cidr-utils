@@ -93,7 +93,7 @@ fn mask_to_bits(mask: u128) -> Option<u8> {
 }
 
 // TODO: Ipv6Able
-/// The type which can be token as an IPv6 address.
+/// The type which can be taken as an IPv6 address.
 pub trait Ipv6Able {
     #[inline]
     fn get_u128(&self) -> u128;
@@ -137,7 +137,7 @@ impl<T: Ipv6Able> Ipv6Able for &T {
 // TODO: Ipv6Cidr
 
 /// To represent IPv6 CIDR.
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct Ipv6Cidr {
     prefix: u128,
     mask: u128,
@@ -308,6 +308,7 @@ impl Ipv6Cidr {
         }
     }
 
+    #[inline]
     pub fn is_ipv6_cidr<S: AsRef<str>>(s: S) -> bool {
         Self::from_str(s).is_ok()
     }
@@ -520,7 +521,7 @@ impl Ipv6Cidr {
     }
 }
 
-// TODO: Ipv4CidrIpv4AddrIterator
+// TODO: Ipv6CidrIpv6AddrIterator
 
 /// To iterate IPv4 CIDR.
 #[derive(Debug)]
