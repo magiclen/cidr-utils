@@ -149,18 +149,7 @@ impl Display for Ipv4Cidr {
 impl PartialOrd for Ipv4Cidr {
     #[inline]
     fn partial_cmp(&self, other: &Ipv4Cidr) -> Option<Ordering> {
-        let a = self.first_as_u8_array();
-        let b = other.first_as_u8_array();
-
-        for i in 0..4 {
-            if a[i] > b[i] {
-                return Some(Ordering::Greater);
-            } else if a[i] < b[i] {
-                return Some(Ordering::Less);
-            }
-        }
-
-        self.get_bits().partial_cmp(&other.get_bits())
+        Some(self.cmp(&other))
     }
 }
 
