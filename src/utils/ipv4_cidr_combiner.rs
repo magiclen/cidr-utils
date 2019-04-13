@@ -1,14 +1,22 @@
 use crate::cidr::Ipv4Cidr;
 use std::ops::Deref;
-use std::fmt::{self, Formatter, Display};
+use std::fmt::{self, Formatter, Debug, Display};
 use core::fmt::Write;
 
-#[derive(Debug)]
+/// To combine multiple Ipv4 CIDRs to supernetworks.
 pub struct Ipv4CidrCombiner {
     cidr_array: Vec<Ipv4Cidr>
 }
 
+impl Debug for Ipv4CidrCombiner {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        Debug::fmt(&self.cidr_array, f)
+    }
+}
+
 impl Display for Ipv4CidrCombiner {
+    #[inline]
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         f.write_char('[')?;
 
@@ -35,6 +43,7 @@ impl Deref for Ipv4CidrCombiner {
 
 impl Ipv4CidrCombiner {
     #[inline]
+    /// Create a new `Ipv4CidrCombiner` instance.
     pub fn new() -> Ipv4CidrCombiner {
         Ipv4CidrCombiner {
             cidr_array: Vec::new()
@@ -42,6 +51,7 @@ impl Ipv4CidrCombiner {
     }
 
     #[inline]
+    /// Create a new `Ipv4CidrCombiner` instance with a specific capacity.
     pub fn with_capacity(capacity: usize) -> Ipv4CidrCombiner {
         Ipv4CidrCombiner {
             cidr_array: Vec::with_capacity(capacity)
@@ -50,6 +60,7 @@ impl Ipv4CidrCombiner {
 }
 
 impl Ipv4CidrCombiner {
+    /// Push a CIDR into this combiner.
     pub fn push(&mut self, mut cidr: Ipv4Cidr) {
         if let Err(mut index) = self.cidr_array.binary_search(&cidr) {
             if self.cidr_array.is_empty() {

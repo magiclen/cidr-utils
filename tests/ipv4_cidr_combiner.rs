@@ -112,3 +112,16 @@ fn push() {
         192.160.0.0/12 + 200.1.0.0/23 + 0.0.0.0/1 + 0.0.0.0/0 = 0.0.0.0/0
     */
 }
+
+#[test]
+fn simple_test() {
+    let mut combiner = Ipv4CidrCombiner::new();
+
+    combiner.push(Ipv4Cidr::from_str("192.168.1.100").unwrap());
+    combiner.push(Ipv4Cidr::from_str("192.168.1.101").unwrap());
+    combiner.push(Ipv4Cidr::from_str("192.168.1.102").unwrap());
+    combiner.push(Ipv4Cidr::from_str("192.168.1.103").unwrap());
+
+    assert_eq!(1, combiner.len());
+    assert_eq!(Ipv4Cidr::from_str("192.168.1.100/30").unwrap(), combiner[0]);
+}

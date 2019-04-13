@@ -1,6 +1,6 @@
 use std::net::Ipv4Addr;
 use std::mem::transmute;
-use std::fmt::{self, Formatter, Display};
+use std::fmt::{self, Formatter, Display, Debug};
 
 use regex::Regex;
 use std::cmp::Ordering;
@@ -115,17 +115,34 @@ impl<T: Ipv4Able> Ipv4Able for &T {
 // TODO: Ipv4Cidr
 
 /// To represent IPv4 CIDR.
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Ipv4Cidr {
     prefix: u32,
     mask: u32,
 }
 
-impl Display for Ipv4Cidr {
+impl Debug for Ipv4Cidr {
+    #[inline]
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        let a: [u8; 4] = u32_to_u8_array(self.prefix);
+        let prefix = self.get_prefix_as_u8_array();
+        let mask = self.get_mask_as_u8_array();
+        let bits = self.get_bits();
 
-        f.write_fmt(format_args!("{}.{}.{}.{}/{}", a[0], a[1], a[2], a[3], mask_to_bits(self.mask).unwrap()))
+        if f.alternate() {
+            f.write_fmt(format_args!("Ipv4Cidr {{\n    prefix: {}.{}.{}.{},\n    mask: {}.{}.{}.{},\n    bits: {}\n}}", prefix[0], prefix[1], prefix[2], prefix[3], mask[0], mask[1], mask[2], mask[3], bits))
+        } else {
+            f.write_fmt(format_args!("{{ prefix: {}.{}.{}.{}, mask: {}.{}.{}.{}, bits: {} }}", prefix[0], prefix[1], prefix[2], prefix[3], mask[0], mask[1], mask[2], mask[3], bits))
+        }
+    }
+}
+
+impl Display for Ipv4Cidr {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        let prefix = self.get_prefix_as_u8_array();
+        let bits = self.get_bits();
+
+        f.write_fmt(format_args!("{}.{}.{}.{}/{}", prefix[0], prefix[1], prefix[2], prefix[3], bits))
     }
 }
 
@@ -371,7 +388,7 @@ impl Iterator for Ipv4CidrU8ArrayIterator {
 impl Ipv4Cidr {
     #[inline]
     pub fn iter_as_u8_array(&self) -> Ipv4CidrU8ArrayIterator {
-        let a = u32_to_u8_array(self.prefix);
+        let a = self.get_prefix_as_u8_array();
 
         let rev_from = u8_array_to_u32([a[3], a[2], a[1], a[0]]);
 
