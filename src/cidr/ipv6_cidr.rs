@@ -1,6 +1,7 @@
 use std::net::Ipv6Addr;
 use std::mem::transmute;
 use std::fmt::{self, Formatter, Display, Debug};
+use std::str::FromStr;
 
 use regex::Regex;
 use std::cmp::Ordering;
@@ -285,40 +286,31 @@ impl Ipv6Cidr {
         }
     }
 
-//    pub fn from_str<S: AsRef<str>>(s: S) -> Result<Ipv6Cidr, Ipv6CidrError> {
-//        let s = s.as_ref();
-//
-//        match RE_IPV4_CIDR.captures(s) {
-//            Some(c) => {
-//                let mut prefix = [0u8; 4];
-//
-//                prefix[0] = c.get(2).unwrap().as_str().parse().unwrap();
-//                prefix[1] = c.get(5).map(|m| m.as_str().parse().unwrap()).unwrap_or(0);
-//                prefix[2] = c.get(8).map(|m| m.as_str().parse().unwrap()).unwrap_or(0);
-//                prefix[3] = c.get(11).map(|m| m.as_str().parse().unwrap()).unwrap_or(0);
-//
-//                if let Some(_) = c.get(13) {
-//                    if let Some(m) = c.get(15) {
-//                        Ok(Ipv6Cidr::from_prefix_and_bits(prefix, m.as_str().parse().unwrap())?)
-//                    } else {
-//                        let mut mask = [0u8; 4];
-//
-//                        mask[0] = c.get(20).unwrap().as_str().parse().unwrap();
-//                        mask[1] = c.get(22).unwrap().as_str().parse().unwrap();
-//                        mask[2] = c.get(24).unwrap().as_str().parse().unwrap();
-//                        mask[3] = c.get(26).unwrap().as_str().parse().unwrap();
-//
-//                        Ok(Ipv6Cidr::from_prefix_and_mask(prefix, mask)?)
-//                    }
-//                } else {
-//                    Ok(Ipv6Cidr::from_prefix_and_bits(prefix, 32)?)
-//                }
-//            }
-//            None => {
-//                Err(Ipv6CidrError::IncorrectIpv6CIDRString)
-//            }
-//        }
-//    }
+    pub fn from_str<S: AsRef<str>>(s: S) -> Result<Ipv6Cidr, Ipv6CidrError> {
+        let s = s.as_ref();
+
+
+        match RE_IPV6_CIDR.captures(s) {
+            Some(c) => {
+                let prefix = Ipv6Addr::from_str(c.get(1).unwrap().as_str()).unwrap().segments();
+
+                let bits: u8 = if let Some(m) = c.get(32) {
+                    m.as_str().parse().unwrap()
+                } else {
+                    128
+                };
+
+                Ipv6Cidr::from_prefix_and_bits(prefix, bits)
+            }
+            None => {
+                Err(Ipv6CidrError::IncorrectIpv6CIDRString)
+            }
+        }
+    }
+
+    pub fn is_ipv6_cidr<S: AsRef<str>>(s: S) -> bool {
+        Self::from_str(s).is_ok()
+    }
 }
 
 impl Ipv6Cidr {
@@ -436,6 +428,127 @@ impl Ipv6Cidr {
             rev_from,
             next: (0, false),
             size: self.size(),
+        }
+    }
+}
+
+// TODO: Ipv6CidrU8ArrayIterator
+
+/// To iterate IPv6 CIDR.
+#[derive(Debug)]
+pub struct Ipv6CidrU16ArrayIterator {
+    rev_from: u128,
+    next: (u128, bool),
+    size: (u128, bool),
+}
+
+impl Iterator for Ipv6CidrU16ArrayIterator {
+    type Item = [u16; 8];
+
+    #[inline]
+    fn next(&mut self) -> Option<[u16; 8]> {
+        if self.next == self.size {
+            None
+        } else {
+            let p = self.rev_from + self.next.0;
+
+            if self.next.0 == u128::max_value() {
+                self.next = (0, true);
+            } else {
+                self.next.0 += 1;
+            }
+
+            let a = u128_to_u8_array(p);
+
+            Some(u128_to_u16_array(u8_array_to_u128([a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3], a[2], a[1], a[0]])))
+        }
+    }
+
+    #[inline]
+    fn last(mut self) -> Option<[u16; 8]> {
+        self.next = (self.size.0 - 1, self.size.1);
+
+        self.next()
+    }
+}
+
+impl Ipv6Cidr {
+    #[inline]
+    pub fn iter_as_u16_array(&self) -> Ipv6CidrU16ArrayIterator {
+        let a = self.get_prefix_as_u8_array();
+
+        let rev_from = u8_array_to_u128([a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3], a[2], a[1], a[0]]);
+
+        Ipv6CidrU16ArrayIterator {
+            rev_from,
+            next: (0, false),
+            size: self.size(),
+        }
+    }
+}
+
+// TODO: Ipv6CidrIterator
+
+/// To iterate IPv6 CIDR.
+#[derive(Debug)]
+pub struct Ipv6CidrIterator {
+    iter: Ipv6CidrU8ArrayIterator
+}
+
+impl Iterator for Ipv6CidrIterator {
+    type Item = u128;
+
+    #[inline]
+    fn next(&mut self) -> Option<u128> {
+        self.iter.next().map(|a| u8_array_to_u128(a))
+    }
+
+    #[inline]
+    fn last(self) -> Option<u128> {
+        self.iter.last().map(|a| u8_array_to_u128(a))
+    }
+}
+
+impl Ipv6Cidr {
+    #[inline]
+    pub fn iter(&self) -> Ipv6CidrIterator {
+        let iter = self.iter_as_u8_array();
+
+        Ipv6CidrIterator {
+            iter
+        }
+    }
+}
+
+// TODO: Ipv4CidrIpv4AddrIterator
+
+/// To iterate IPv4 CIDR.
+#[derive(Debug)]
+pub struct Ipv6CidrIpv6AddrIterator {
+    iter: Ipv6CidrU16ArrayIterator
+}
+
+impl Iterator for Ipv6CidrIpv6AddrIterator {
+    type Item = Ipv6Addr;
+
+    #[inline]
+    fn next(&mut self) -> Option<Ipv6Addr> {
+        self.iter.next().map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+    }
+
+    #[inline]
+    fn last(self) -> Option<Ipv6Addr> {
+        self.iter.last().map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+    }
+}
+
+impl Ipv6Cidr {
+    #[inline]
+    pub fn iter_as_ipv6_addr(&self) -> Ipv6CidrIpv6AddrIterator {
+        let iter = self.iter_as_u16_array();
+
+        Ipv6CidrIpv6AddrIterator {
+            iter
         }
     }
 }

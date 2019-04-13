@@ -277,16 +277,20 @@ impl Ipv4Cidr {
                         mask[2] = c.get(24).unwrap().as_str().parse().unwrap();
                         mask[3] = c.get(26).unwrap().as_str().parse().unwrap();
 
-                        Ok(Ipv4Cidr::from_prefix_and_mask(prefix, mask)?)
+                        Ipv4Cidr::from_prefix_and_mask(prefix, mask)
                     }
                 } else {
-                    Ok(Ipv4Cidr::from_prefix_and_bits(prefix, 32)?)
+                    Ipv4Cidr::from_prefix_and_bits(prefix, 32)
                 }
             }
             None => {
                 Err(Ipv4CidrError::IncorrectIpv4CIDRString)
             }
         }
+    }
+
+    pub fn is_ipv4_cidr<S: AsRef<str>>(s: S) -> bool {
+        Self::from_str(s).is_ok()
     }
 }
 
