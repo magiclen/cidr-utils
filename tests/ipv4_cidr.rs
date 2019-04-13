@@ -85,6 +85,12 @@ fn compare() {
 
     assert_eq!(Ordering::Equal, cidr_5.partial_cmp(&cidr_6).unwrap());
     assert_eq!(Ordering::Greater, cidr_5.partial_cmp(&cidr_7).unwrap());
+
+    let cidr_8 = Ipv4Cidr::from_str("200.1.0.0/24").unwrap();
+    let cidr_9 = Ipv4Cidr::from_str("192.160.0.0/12").unwrap();
+
+    assert_eq!(Ordering::Greater, cidr_8.partial_cmp(&cidr_9).unwrap());
+    assert_eq!(Ordering::Less, cidr_9.partial_cmp(&cidr_8).unwrap());
 }
 
 #[test]

@@ -115,7 +115,7 @@ impl<T: Ipv4Able> Ipv4Able for &T {
 // TODO: Ipv4Cidr
 
 /// To represent IPv4 CIDR.
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Ipv4Cidr {
     prefix: u32,
     mask: u32,
@@ -130,6 +130,7 @@ impl Display for Ipv4Cidr {
 }
 
 impl PartialOrd for Ipv4Cidr {
+    #[inline]
     fn partial_cmp(&self, other: &Ipv4Cidr) -> Option<Ordering> {
         let a = self.first_as_u8_array();
         let b = other.first_as_u8_array();
@@ -142,7 +143,25 @@ impl PartialOrd for Ipv4Cidr {
             }
         }
 
-        other.get_bits().partial_cmp(&self.get_bits())
+        self.get_bits().partial_cmp(&other.get_bits())
+    }
+}
+
+impl Ord for Ipv4Cidr {
+    #[inline]
+    fn cmp(&self, other: &Ipv4Cidr) -> Ordering {
+        let a = self.first_as_u8_array();
+        let b = other.first_as_u8_array();
+
+        for i in 0..4 {
+            if a[i] > b[i] {
+                return Ordering::Greater;
+            } else if a[i] < b[i] {
+                return Ordering::Less;
+            }
+        }
+
+        self.get_bits().cmp(&other.get_bits())
     }
 }
 
