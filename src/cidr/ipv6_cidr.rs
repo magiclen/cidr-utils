@@ -361,7 +361,7 @@ impl Ipv6Cidr {
     pub fn size(&self) -> (u128, bool) {
         let bits = self.get_bits();
 
-        if bits == 128 {
+        if bits == 0 {
             (0, true)
         } else {
             (2u128.pow((128 - self.get_bits()) as u32), false)

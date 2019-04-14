@@ -125,4 +125,14 @@ impl IpCidrCombiner {
 
         false
     }
+
+    #[inline]
+    pub fn ipv4_size(&self) -> u64 {
+        self.ipv4.size()
+    }
+
+    #[inline]
+    pub fn ipv6_size(&self) -> (u128, bool) {
+        self.ipv6.size()
+    }
 }

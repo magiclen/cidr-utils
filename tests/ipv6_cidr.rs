@@ -62,6 +62,15 @@ fn last() {
 }
 
 #[test]
+fn size() {
+    let cidr_1 = Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFFF:0/112").unwrap();
+    let cidr_2 = Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFFF:0/0").unwrap();
+
+    assert_eq!(false, cidr_1.size().1);
+    assert_eq!(true, cidr_2.size().1);
+}
+
+#[test]
 fn compare() {
     let cidr_1 = Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFFF:0/112").unwrap();
     let cidr_2 = Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFDC:0/113").unwrap();
@@ -82,7 +91,7 @@ fn contains() {
 
 #[test]
 fn iter_as_ipv6_addr() {
-    let cidr =  Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFFF:0/112").unwrap();
+    let cidr = Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFFF:0/112").unwrap();
 
     let mut iter = cidr.iter_as_ipv6_addr();
 
