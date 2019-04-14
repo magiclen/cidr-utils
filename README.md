@@ -35,7 +35,8 @@ assert_eq!(false, IpCidr::is_ip_cidr("192/255.255.0.0"));
 assert_eq!(true, IpCidr::is_ip_cidr("2001:4f8:3:ba::/64"));
 assert_eq!(true, IpCidr::is_ip_cidr("2001:4f8:3:ba:2e0:81ff:fe22:d1f1/128"));
 assert_eq!(true, IpCidr::is_ip_cidr("::ffff:1.2.3.0/120"));
-assert_eq!(true, IpCidr::is_ip_cidr("::ffff:1.2.3.0/128"));
+assert_eq!(true, IpCidr::is_ip_cidr("::ffff:1.2.3.1/120"));
+assert_eq!(false, IpCidr::is_ip_cidr("::ffff:1.2.3.0/129"));
 
 assert_eq!(true, IpCidr::is_ip_cidr("2001:4f8:3:ba:2e0:81ff:fe22:d1f1")); // 2001:4f8:3:ba:2e0:81ff:fe22:d1f1/128
 assert_eq!(true, IpCidr::is_ip_cidr("2001:4f8:3:ba::"));                  // 2001:4f8:3:ba::/128
