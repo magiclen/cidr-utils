@@ -8,6 +8,7 @@ use crate::cidr::ipv6_cidr::{Ipv6Cidr, Ipv6CidrIpv6AddrIterator};
 // TODO: IpCidr
 
 #[derive(PartialEq, Eq, Clone)]
+// The type which can be taken as an IP address.
 pub enum IpCidr {
     V4(Ipv4Cidr),
     V6(Ipv6Cidr),
