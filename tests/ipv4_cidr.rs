@@ -45,17 +45,35 @@ fn from_str() {
     assert_eq!(Ipv4Addr::new(255, 255, 255, 128), cidr_2.get_mask_as_ipv4_addr());
     assert_eq!(Ipv4Addr::new(192, 168, 43, 0), cidr_2.get_prefix_as_ipv4_addr());
 
-    let cidr_3 = Ipv4Cidr::from_str("0.0.255").unwrap();
+    let cidr_3 = Ipv4Cidr::from_str("0.0.255.0/255.255.0.0").unwrap();
 
-    assert_eq!(32, cidr_3.get_bits());
-    assert_eq!(Ipv4Addr::new(255, 255, 255, 255), cidr_3.get_mask_as_ipv4_addr());
-    assert_eq!(Ipv4Addr::new(0, 0, 255, 0), cidr_3.get_prefix_as_ipv4_addr());
+    assert_eq!(16, cidr_3.get_bits());
+    assert_eq!(Ipv4Addr::new(255, 255, 0, 0), cidr_3.get_mask_as_ipv4_addr());
+    assert_eq!(Ipv4Addr::new(0, 0, 0, 0), cidr_3.get_prefix_as_ipv4_addr());
 
-    let cidr_4 = Ipv4Cidr::from_str("0.0.255/255.255.0.0").unwrap();
+    let cidr_4 = Ipv4Cidr::from_str("0.0.255.0").unwrap();
 
-    assert_eq!(16, cidr_4.get_bits());
-    assert_eq!(Ipv4Addr::new(255, 255, 0, 0), cidr_4.get_mask_as_ipv4_addr());
-    assert_eq!(Ipv4Addr::new(0, 0, 0, 0), cidr_4.get_prefix_as_ipv4_addr());
+    assert_eq!(32, cidr_4.get_bits());
+    assert_eq!(Ipv4Addr::new(255, 255, 255, 255), cidr_4.get_mask_as_ipv4_addr());
+    assert_eq!(Ipv4Addr::new(0, 0, 255, 0), cidr_4.get_prefix_as_ipv4_addr());
+
+    let cidr_5 = Ipv4Cidr::from_str("0.0.255").unwrap();
+
+    assert_eq!(24, cidr_5.get_bits());
+    assert_eq!(Ipv4Addr::new(255, 255, 255, 0), cidr_5.get_mask_as_ipv4_addr());
+    assert_eq!(Ipv4Addr::new(0, 0, 255, 0), cidr_5.get_prefix_as_ipv4_addr());
+
+    let cidr_6 = Ipv4Cidr::from_str("0.0").unwrap();
+
+    assert_eq!(16, cidr_6.get_bits());
+    assert_eq!(Ipv4Addr::new(255, 255, 0, 0), cidr_6.get_mask_as_ipv4_addr());
+    assert_eq!(Ipv4Addr::new(0, 0, 0, 0), cidr_6.get_prefix_as_ipv4_addr());
+
+    let cidr_7 = Ipv4Cidr::from_str("0").unwrap();
+
+    assert_eq!(8, cidr_7.get_bits());
+    assert_eq!(Ipv4Addr::new(255, 0, 0, 0), cidr_7.get_mask_as_ipv4_addr());
+    assert_eq!(Ipv4Addr::new(0, 0, 0, 0), cidr_7.get_prefix_as_ipv4_addr());
 }
 
 #[test]

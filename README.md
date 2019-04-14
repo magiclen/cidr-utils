@@ -1,5 +1,7 @@
-/*!
-# CIDR Utils
+CIDR Utils
+====================
+
+[![Build Status](https://travis-ci.org/magiclen/cidr-utils.svg?branch=master)](https://travis-ci.org/magiclen/cidr-utils)
 
 This crate provides data structures and functions to deal with IPv4 CIDRs and IPv6 CIDRs.
 
@@ -98,14 +100,15 @@ assert_eq!("192.168.51.100/30".to_string(), combiner[0].to_string());
 assert_eq!(true, combiner.contains([192, 168, 51, 102]));
 assert_eq!(false, combiner.contains([192, 168, 51, 105]));
 ```
-*/
 
-#[macro_use]
-extern crate lazy_static;
-extern crate regex;
+## Crates.io
 
-/// This module provides data structures for IPv4 CIDRs and IPv6 CIDRs.
-pub mod cidr;
+https://crates.io/crates/cidr-utils
 
-/// This module provides data structures and functions for specific usage.
-pub mod utils;
+## Documentation
+
+https://docs.rs/cidr-utils
+
+## License
+
+[MIT](LICENSE)

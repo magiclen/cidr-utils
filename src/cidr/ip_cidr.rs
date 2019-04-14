@@ -261,7 +261,7 @@ enum IpCidrIpsAddrIterator {
     V6(Ipv6CidrIpv6AddrIterator),
 }
 
-/// To iterate IP CIDR.
+/// To iterate IP CIDRs.
 #[derive(Debug)]
 pub struct IpCidrIpAddrIterator {
     iter: IpCidrIpsAddrIterator

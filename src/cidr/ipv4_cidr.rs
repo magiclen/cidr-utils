@@ -260,15 +260,47 @@ impl Ipv4Cidr {
         match RE_IPV4_CIDR.captures(s) {
             Some(c) => {
                 let mut prefix = [0u8; 4];
+                let mut prefer_bits = None;
 
                 prefix[0] = c.get(2).unwrap().as_str().parse().unwrap();
-                prefix[1] = c.get(5).map(|m| m.as_str().parse().unwrap()).unwrap_or(0);
-                prefix[2] = c.get(8).map(|m| m.as_str().parse().unwrap()).unwrap_or(0);
-                prefix[3] = c.get(11).map(|m| m.as_str().parse().unwrap()).unwrap_or(0);
+                match c.get(5).map(|m| m.as_str().parse().unwrap()) {
+                    Some(n) => {
+                        prefix[1] = n;
+
+                        match c.get(8).map(|m| m.as_str().parse().unwrap()) {
+                            Some(n) => {
+                                prefix[2] = n;
+
+                                match c.get(11).map(|m| m.as_str().parse().unwrap()) {
+                                    Some(n) => {
+                                        prefix[3] = n;
+                                    }
+                                    None => {
+                                        prefer_bits = Some(24);
+                                    }
+                                }
+                            }
+                            None => {
+                                prefer_bits = Some(16);
+                            }
+                        }
+                    }
+                    None => {
+                        prefer_bits = Some(8);
+                    }
+                }
 
                 if let Some(_) = c.get(13) {
                     if let Some(m) = c.get(15) {
-                        Ok(Ipv4Cidr::from_prefix_and_bits(prefix, m.as_str().parse().unwrap())?)
+                        let bits = m.as_str().parse().unwrap();
+
+                        if let Some(prefer_bits) = prefer_bits {
+                            if bits != prefer_bits {
+                                return Err(Ipv4CidrError::IncorrectIpv4CIDRString);
+                            }
+                        }
+
+                        Ok(Ipv4Cidr::from_prefix_and_bits(prefix, bits)?)
                     } else {
                         let mut mask = [0u8; 4];
 
@@ -277,10 +309,23 @@ impl Ipv4Cidr {
                         mask[2] = c.get(24).unwrap().as_str().parse().unwrap();
                         mask[3] = c.get(26).unwrap().as_str().parse().unwrap();
 
-                        Ipv4Cidr::from_prefix_and_mask(prefix, mask)
+                        match mask_to_bits(u8_array_to_u32(mask)) {
+                            Some(bits) => {
+                                if let Some(prefer_bits) = prefer_bits {
+                                    if bits != prefer_bits {
+                                        return Err(Ipv4CidrError::IncorrectIpv4CIDRString);
+                                    }
+                                }
+
+                                Ipv4Cidr::from_prefix_and_mask(prefix, mask)
+                            }
+                            None => {
+                                Err(Ipv4CidrError::IncorrectIpv4CIDRString)
+                            }
+                        }
                     }
                 } else {
-                    Ipv4Cidr::from_prefix_and_bits(prefix, 32)
+                    Ipv4Cidr::from_prefix_and_bits(prefix, prefer_bits.unwrap_or(32))
                 }
             }
             None => {
@@ -344,7 +389,7 @@ impl Ipv4Cidr {
 
 // TODO: Ipv4CidrU8ArrayIterator
 
-/// To iterate IPv4 CIDR.
+/// To iterate IPv4 CIDRs.
 #[derive(Debug)]
 pub struct Ipv4CidrU8ArrayIterator {
     rev_from: u32,
@@ -395,7 +440,7 @@ impl Ipv4Cidr {
 
 // TODO: Ipv4CidrIterator
 
-/// To iterate IPv4 CIDR.
+/// To iterate IPv4 CIDRs.
 #[derive(Debug)]
 pub struct Ipv4CidrIterator {
     iter: Ipv4CidrU8ArrayIterator
@@ -428,7 +473,7 @@ impl Ipv4Cidr {
 
 // TODO: Ipv4CidrIpv4AddrIterator
 
-/// To iterate IPv4 CIDR.
+/// To iterate IPv4 CIDRs.
 #[derive(Debug)]
 pub struct Ipv4CidrIpv4AddrIterator {
     iter: Ipv4CidrU8ArrayIterator

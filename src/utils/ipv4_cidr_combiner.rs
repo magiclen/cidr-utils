@@ -3,7 +3,7 @@ use std::ops::Deref;
 use std::fmt::{self, Formatter, Debug, Display};
 use core::fmt::Write;
 
-/// To combine multiple Ipv4 CIDRs to supernetworks.
+/// To combine multiple IPv4 CIDRs to supernetworks.
 pub struct Ipv4CidrCombiner {
     cidr_array: Vec<Ipv4Cidr>
 }
@@ -20,13 +20,17 @@ impl Display for Ipv4CidrCombiner {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         f.write_char('[')?;
 
-        let length_dec = self.cidr_array.len() - 1;
+        let length = self.cidr_array.len();
 
-        for cidr in self.cidr_array.iter().take(length_dec) {
-            f.write_fmt(format_args!("{}, ", cidr))?
+        if length > 0 {
+            let length_dec = length - 1;
+
+            for cidr in self.cidr_array.iter().take(length_dec) {
+                f.write_fmt(format_args!("{}, ", cidr))?
+            }
+
+            f.write_fmt(format_args!("{}", self.cidr_array[length_dec]))?;
         }
-
-        f.write_fmt(format_args!("{}", self.cidr_array[length_dec]))?;
 
         f.write_char(']')
     }
@@ -150,7 +154,7 @@ impl Ipv4CidrCombiner {
     }
 
     #[inline]
-    /// Check an Ipv4 whether it is in these CIDRs.
+    /// Check an IPv4 whether it is in these CIDRs.
     pub fn contains<IP: Ipv4Able>(&self, ipv4: IP) -> bool {
         for cidr in self.cidr_array.iter() {
             if cidr.contains(&ipv4) {

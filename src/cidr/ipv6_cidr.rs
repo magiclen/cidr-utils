@@ -380,7 +380,7 @@ impl Ipv6Cidr {
 
 // TODO: Ipv6CidrU8ArrayIterator
 
-/// To iterate IPv6 CIDR.
+/// To iterate IPv6 CIDRs.
 #[derive(Debug)]
 pub struct Ipv6CidrU8ArrayIterator {
     rev_from: u128,
@@ -435,7 +435,7 @@ impl Ipv6Cidr {
 
 // TODO: Ipv6CidrU8ArrayIterator
 
-/// To iterate IPv6 CIDR.
+/// To iterate IPv6 CIDRs.
 #[derive(Debug)]
 pub struct Ipv6CidrU16ArrayIterator {
     rev_from: u128,
@@ -490,7 +490,7 @@ impl Ipv6Cidr {
 
 // TODO: Ipv6CidrIterator
 
-/// To iterate IPv6 CIDR.
+/// To iterate IPv6 CIDRs.
 #[derive(Debug)]
 pub struct Ipv6CidrIterator {
     iter: Ipv6CidrU8ArrayIterator
@@ -523,7 +523,7 @@ impl Ipv6Cidr {
 
 // TODO: Ipv6CidrIpv6AddrIterator
 
-/// To iterate IPv4 CIDR.
+/// To iterate IPv4 CIDRs.
 #[derive(Debug)]
 pub struct Ipv6CidrIpv6AddrIterator {
     iter: Ipv6CidrU16ArrayIterator
