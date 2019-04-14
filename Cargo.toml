@@ -1,6 +1,6 @@
 [package]
 name = "cidr-utils"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2018"
 repository = "https://github.com/magiclen/cidr-utils"

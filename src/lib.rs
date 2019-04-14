@@ -65,6 +65,8 @@ let cidr = Ipv4Cidr::from_str("192.168.51.0/24").unwrap();
 assert_eq!(true, cidr.contains([192, 168, 51, 103]));
 assert_eq!(true, cidr.contains(Ipv4Addr::new(192, 168, 51, 103)));
 assert_eq!(false, cidr.contains([192, 168, 50, 103]));
+
+assert_eq!(256, cidr.size());
 ```
 
 ```rust
@@ -98,6 +100,8 @@ assert_eq!("192.168.51.100/30".to_string(), combiner[0].to_string());
 
 assert_eq!(true, combiner.contains([192, 168, 51, 102]));
 assert_eq!(false, combiner.contains([192, 168, 51, 105]));
+
+assert_eq!(4, combiner.size());
 ```
 */
 

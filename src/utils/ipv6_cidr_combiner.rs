@@ -164,4 +164,21 @@ impl Ipv6CidrCombiner {
 
         false
     }
+
+    #[inline]
+    pub fn size(&self) -> (u128, bool) {
+        let mut sum = 0;
+
+        for cidr in self.cidr_array.iter() {
+            let (c_sum, c_max) = cidr.size();
+
+            if c_max {
+                return (0, true);
+            }
+
+            sum += c_sum;
+        }
+
+        (sum, false)
+    }
 }

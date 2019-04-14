@@ -164,4 +164,15 @@ impl Ipv4CidrCombiner {
 
         false
     }
+
+    #[inline]
+    pub fn size(&self) -> u64 {
+        let mut sum = 0;
+
+        for cidr in self.cidr_array.iter() {
+            sum += cidr.size();
+        }
+
+        sum
+    }
 }
