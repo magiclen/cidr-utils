@@ -424,7 +424,14 @@ impl Iterator for Ipv4CidrU8ArrayIterator {
 
     #[inline]
     fn nth(&mut self, n: usize) -> Option<[u8; 4]> {
-        let n_u64 = (n as u64).min(self.size - self.next);
+        self.nth_u64(n as u64)
+    }
+}
+
+impl Ipv4CidrU8ArrayIterator {
+    #[inline]
+    pub fn nth_u64(&mut self, n: u64) -> Option<[u8; 4]> {
+        let n_u64 = n.min(self.size - self.next);
 
         self.next += n_u64;
 
@@ -474,6 +481,13 @@ impl Iterator for Ipv4CidrIterator {
     }
 }
 
+impl Ipv4CidrIterator {
+    #[inline]
+    pub fn nth_u64(&mut self, n: u64) -> Option<u32> {
+        self.iter.nth_u64(n).map(|a| u8_array_to_u32(a))
+    }
+}
+
 impl Ipv4Cidr {
     #[inline]
     pub fn iter(&self) -> Ipv4CidrIterator {
@@ -509,6 +523,13 @@ impl Iterator for Ipv4CidrIpv4AddrIterator {
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Ipv4Addr> {
         self.iter.nth(n).map(|a| Ipv4Addr::new(a[0], a[1], a[2], a[3]))
+    }
+}
+
+impl Ipv4CidrIpv4AddrIterator {
+    #[inline]
+    pub fn nth_u64(&mut self, n: u64) -> Option<Ipv4Addr> {
+        self.iter.nth_u64(n).map(|a| Ipv4Addr::new(a[0], a[1], a[2], a[3]))
     }
 }
 

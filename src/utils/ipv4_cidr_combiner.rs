@@ -64,6 +64,13 @@ impl Ipv4CidrCombiner {
     }
 
     #[inline]
+    pub unsafe fn from_ipv4_cidr_vec_unchecked(cidr_vec: Vec<Ipv4Cidr>) -> Ipv4CidrCombiner {
+        Ipv4CidrCombiner {
+            cidr_array: cidr_vec
+        }
+    }
+
+    #[inline]
     pub fn into_ipv4_cidr_vec(self) -> Vec<Ipv4Cidr> {
         self.cidr_array
     }

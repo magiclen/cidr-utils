@@ -78,6 +78,14 @@ impl IpCidrCombiner {
     }
 
     #[inline]
+    pub unsafe fn from_cidr_vec_unchecked(ipv4_cidr_vec: Vec<Ipv4Cidr>, ipv6_cidr_vec: Vec<Ipv6Cidr>) -> IpCidrCombiner {
+        IpCidrCombiner {
+            ipv4: Ipv4CidrCombiner::from_ipv4_cidr_vec_unchecked(ipv4_cidr_vec),
+            ipv6: Ipv6CidrCombiner::from_ipv6_cidr_vec_unchecked(ipv6_cidr_vec),
+        }
+    }
+
+    #[inline]
     pub fn into_ipv4_cidr_vec(self) -> Vec<Ipv4Cidr> {
         self.ipv4.into_ipv4_cidr_vec()
     }

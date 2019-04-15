@@ -15,6 +15,27 @@ lazy_static! {
 // TODO: Functions
 
 #[inline]
+fn subtract(a: (u128, bool), b: (u128, bool)) -> (u128, bool) {
+    if a.1 {
+        if b.1 {
+            (0, false)
+        } else {
+            if b.0 == 0 {
+                (0, true)
+            } else {
+                (u128::max_value() - b.0 + 1, false)
+            }
+        }
+    } else {
+        if b.1 {
+            unreachable!()
+        } else {
+            (a.0 - b.0, false)
+        }
+    }
+}
+
+#[inline]
 fn get_mask(bits: u8) -> u128 {
     let mut a = [0u8; 16];
 
@@ -416,6 +437,36 @@ impl Iterator for Ipv6CidrU8ArrayIterator {
 
         self.next()
     }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Option<[u8; 16]> {
+        self.nth_u128((n as u128, false))
+    }
+}
+
+impl Ipv6CidrU8ArrayIterator {
+    #[inline]
+    pub fn nth_u128(&mut self, n: (u128, bool)) -> Option<[u8; 16]> {
+        if n.1 {
+            self.next = self.size;
+        } else {
+            let d = subtract(self.size, self.next);
+
+            if d.1 {
+                self.next.0 += n.0;
+            } else {
+                let n = n.0.min(d.0);
+
+                if u128::max_value() - n < self.next.0 {
+                    self.next = self.size;
+                } else {
+                    self.next.0 += n;
+                }
+            }
+        }
+
+        self.next()
+    }
 }
 
 impl Ipv6Cidr {
@@ -471,6 +522,32 @@ impl Iterator for Ipv6CidrU16ArrayIterator {
 
         self.next()
     }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Option<[u16; 8]> {
+        self.nth_u128((n as u128, false))
+    }
+}
+
+impl Ipv6CidrU16ArrayIterator {
+    #[inline]
+    pub fn nth_u128(&mut self, n: (u128, bool)) -> Option<[u16; 8]> {
+        if n.1 {
+            self.next = self.size;
+        } else {
+            let d = subtract(self.size, self.next);
+
+            if d.1 {
+                self.next.0 += n.0;
+            } else {
+                let n = n.0.min(d.0);
+
+                self.next.0 += n;
+            }
+        }
+
+        self.next()
+    }
 }
 
 impl Ipv6Cidr {
@@ -508,6 +585,18 @@ impl Iterator for Ipv6CidrIterator {
     fn last(self) -> Option<u128> {
         self.iter.last().map(|a| u8_array_to_u128(a))
     }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Option<u128> {
+        self.iter.nth(n).map(|a| u8_array_to_u128(a))
+    }
+}
+
+impl Ipv6CidrIterator {
+    #[inline]
+    pub fn nth_u128(&mut self, n: (u128, bool)) -> Option<u128> {
+        self.iter.nth_u128(n).map(|a| u8_array_to_u128(a))
+    }
 }
 
 impl Ipv6Cidr {
@@ -540,6 +629,18 @@ impl Iterator for Ipv6CidrIpv6AddrIterator {
     #[inline]
     fn last(self) -> Option<Ipv6Addr> {
         self.iter.last().map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+    }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Option<Ipv6Addr> {
+        self.iter.nth(n).map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+    }
+}
+
+impl Ipv6CidrIpv6AddrIterator {
+    #[inline]
+    pub fn nth_u128(&mut self, n: (u128, bool)) -> Option<Ipv6Addr> {
+        self.iter.nth_u128(n).map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
     }
 }
 

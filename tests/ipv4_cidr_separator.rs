@@ -24,6 +24,19 @@ fn divide_by() {
     assert_eq!(51, result[2].size());
     assert_eq!(51, result[3].size());
     assert_eq!(52, result[4].size());
+
+    let cidr = Ipv4Cidr::from_str("0.0.0.0/0").unwrap();
+
+    let result = Ipv4CidrSeparator::divide_by(&cidr, 1).unwrap();
+
+    assert_eq!(1, result.len());
+    assert_eq!(2u64.pow(32), result[0].size());
+
+    let result = Ipv4CidrSeparator::divide_by(&cidr, 2).unwrap();
+
+    assert_eq!(2, result.len());
+    assert_eq!(2u64.pow(31), result[0].size());
+    assert_eq!(2u64.pow(31), result[1].size());
 }
 
 #[test]

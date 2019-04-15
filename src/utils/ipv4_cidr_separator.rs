@@ -13,6 +13,12 @@ impl Ipv4CidrSeparator {
 
         if n == 0 || n_u64 > size {
             return None;
+        } else if n == 1 {
+            let mut combiner = Ipv4CidrCombiner::with_capacity(1);
+
+            combiner.push(cidr.clone());
+
+            return Some(vec![combiner]);
         }
 
         let mut output = Vec::with_capacity(n);
@@ -20,18 +26,40 @@ impl Ipv4CidrSeparator {
         let d = size / n_u64;
 
         if d * n_u64 == size {
-            let iter = cidr.iter();
+            let mut iter = cidr.iter();
 
-            let bits  = cidr.get_bits() + (n as f64).log2() as u8;
+            let bits = cidr.get_bits() + (n as f64).log2() as u8;
 
-            for ip in iter.step_by(d as usize) {
-                let mut combiner = Ipv4CidrCombiner::with_capacity(1);
+            let usize_max_u64 = usize::max_value() as u64;
 
-                combiner.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+            if d <= usize_max_u64 {
+                for ip in iter.step_by(d as usize) {
+                    let mut combiner = Ipv4CidrCombiner::with_capacity(1);
 
-                output.push(combiner);
+                    combiner.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+
+                    output.push(combiner);
+                }
+            } else {
+                let nth = d - 1;
+
+                if let Some(ip) = iter.next() {
+                    let mut combiner = Ipv4CidrCombiner::with_capacity(1);
+
+                    combiner.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+
+                    output.push(combiner);
+
+                    while let Some(ip) = iter.nth_u64(nth) {
+                        let mut combiner = Ipv4CidrCombiner::with_capacity(1);
+
+                        combiner.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+
+                        output.push(combiner);
+                    }
+                }
             }
-        }else {
+        } else {
             let iter = cidr.iter();
 
             let mut current_combiner = Ipv4CidrCombiner::new();
@@ -68,6 +96,8 @@ impl Ipv4CidrSeparator {
 
         if cidr_bits > bits {
             return None;
+        } else if cidr_bits == bits {
+            return Some(vec![cidr.clone()]);
         }
 
         let n = 2usize.pow((bits - cidr_bits) as u32);
@@ -78,10 +108,24 @@ impl Ipv4CidrSeparator {
 
         let d = cidr.size() / n_u64;
 
-        let iter = cidr.iter();
+        let mut iter = cidr.iter();
 
-        for ip in iter.step_by(d as usize) {
-            output.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+        let usize_max_u64 = usize::max_value() as u64;
+
+        if d <= usize_max_u64 {
+            for ip in iter.step_by(d as usize) {
+                output.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+            }
+        } else {
+            let nth = d - 1;
+
+            if let Some(ip) = iter.next() {
+                output.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+
+                while let Some(ip) = iter.nth_u64(nth) {
+                    output.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                }
+            }
         }
 
         Some(output)
