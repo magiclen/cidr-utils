@@ -1,4 +1,5 @@
 use crate::cidr::{Ipv4Cidr, Ipv4Able};
+
 use std::ops::Deref;
 use std::fmt::{self, Formatter, Debug, Display};
 use core::fmt::Write;
@@ -60,6 +61,11 @@ impl Ipv4CidrCombiner {
         Ipv4CidrCombiner {
             cidr_array: Vec::with_capacity(capacity)
         }
+    }
+
+    #[inline]
+    pub fn into_ipv4_cidr_vec(self) -> Vec<Ipv4Cidr> {
+        self.cidr_array
     }
 }
 

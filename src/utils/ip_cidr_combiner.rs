@@ -76,6 +76,16 @@ impl IpCidrCombiner {
             ipv6: Ipv6CidrCombiner::with_capacity(ipv6_capacity),
         }
     }
+
+    #[inline]
+    pub fn into_ipv4_cidr_vec(self) -> Vec<Ipv4Cidr> {
+        self.ipv4.into_ipv4_cidr_vec()
+    }
+
+    #[inline]
+    pub fn into_ipv6_cidr_vec(self) -> Vec<Ipv6Cidr> {
+        self.ipv6.into_ipv6_cidr_vec()
+    }
 }
 
 impl IpCidrCombiner {

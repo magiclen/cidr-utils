@@ -61,6 +61,11 @@ impl Ipv6CidrCombiner {
             cidr_array: Vec::with_capacity(capacity)
         }
     }
+
+    #[inline]
+    pub fn into_ipv6_cidr_vec(self) -> Vec<Ipv6Cidr> {
+        self.cidr_array
+    }
 }
 
 impl Ipv6CidrCombiner {

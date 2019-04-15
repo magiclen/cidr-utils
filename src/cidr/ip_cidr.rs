@@ -294,6 +294,18 @@ impl Iterator for IpCidrIpAddrIterator {
             }
         }
     }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Option<IpAddr> {
+        match &mut self.iter {
+            IpCidrIpsAddrIterator::V4(iter) => {
+                iter.nth(n).map(|ip| IpAddr::V4(ip))
+            }
+            IpCidrIpsAddrIterator::V6(iter) => {
+                iter.nth(n).map(|ip| IpAddr::V6(ip))
+            }
+        }
+    }
 }
 
 impl IpCidr {
