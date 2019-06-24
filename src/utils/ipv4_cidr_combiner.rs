@@ -1,19 +1,13 @@
 use crate::cidr::{Ipv4Cidr, Ipv4Able};
 
 use std::ops::Deref;
-use std::fmt::{self, Formatter, Debug, Display};
+use std::fmt::{self, Formatter, Display};
 use core::fmt::Write;
 
 /// To combine multiple IPv4 CIDRs to supernetworks.
+#[derive(Debug)]
 pub struct Ipv4CidrCombiner {
     cidr_array: Vec<Ipv4Cidr>
-}
-
-impl Debug for Ipv4CidrCombiner {
-    #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        Debug::fmt(&self.cidr_array, f)
-    }
 }
 
 impl Display for Ipv4CidrCombiner {

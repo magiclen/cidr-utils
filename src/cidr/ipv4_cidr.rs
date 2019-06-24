@@ -129,9 +129,13 @@ impl Debug for Ipv4Cidr {
         let bits = self.get_bits();
 
         if f.alternate() {
-            f.write_fmt(format_args!("Ipv4Cidr {{\n    prefix: {}.{}.{}.{},\n    mask: {}.{}.{}.{},\n    bits: {}\n}}", prefix[0], prefix[1], prefix[2], prefix[3], mask[0], mask[1], mask[2], mask[3], bits))
+            let debug_text = format!("Ipv4Cidr {{\n    prefix: {}.{}.{}.{},\n    mask: {}.{}.{}.{},\n    bits: {}\n}}", prefix[0], prefix[1], prefix[2], prefix[3], mask[0], mask[1], mask[2], mask[3], bits);
+
+            f.pad(&debug_text)
         } else {
-            f.write_fmt(format_args!("{{ prefix: {}.{}.{}.{}, mask: {}.{}.{}.{}, bits: {} }}", prefix[0], prefix[1], prefix[2], prefix[3], mask[0], mask[1], mask[2], mask[3], bits))
+            let debug_text = format!("Ipv4Cidr {{ prefix: {}.{}.{}.{}, mask: {}.{}.{}.{}, bits: {} }}", prefix[0], prefix[1], prefix[2], prefix[3], mask[0], mask[1], mask[2], mask[3], bits);
+
+            f.pad(&debug_text)
         }
     }
 }

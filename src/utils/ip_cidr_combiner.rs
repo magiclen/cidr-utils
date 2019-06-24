@@ -14,9 +14,13 @@ impl Debug for IpCidrCombiner {
     #[inline]
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         if f.alternate() {
-            f.write_fmt(format_args!("IpCidrCombiner {{\n    ipv4: {:#?},\n    ipv6: {:#?}\n}}", self.ipv4, self.ipv6))
+            let debug_text = format!("IpCidrCombiner {{\n    ipv4: {:#?},\n    ipv6: {:#?}\n}}", self.ipv4, self.ipv6);
+
+            f.pad(&debug_text)
         } else {
-            f.write_fmt(format_args!("{{ ipv4: {:?}, ipv6: {:?} }}", self.ipv4, self.ipv6))
+            let debug_text = format!("IpCidrCombiner {{ ipv4: {:?}, ipv6: {:?} }}", self.ipv4, self.ipv6);
+
+            f.pad(&debug_text)
         }
     }
 }

@@ -1,4 +1,4 @@
-use std::fmt::{self, Formatter, Display, Debug};
+use std::fmt::{self, Formatter, Display};
 use std::cmp::Ordering;
 use std::net::IpAddr;
 
@@ -7,25 +7,11 @@ use crate::cidr::ipv6_cidr::{Ipv6Cidr, Ipv6CidrIpv6AddrIterator};
 
 // TODO: IpCidr
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 // The type which can be taken as an IP address.
 pub enum IpCidr {
     V4(Ipv4Cidr),
     V6(Ipv6Cidr),
-}
-
-impl Debug for IpCidr {
-    #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        match self {
-            IpCidr::V4(cidr) => {
-                Debug::fmt(&cidr, f)
-            }
-            IpCidr::V6(cidr) => {
-                Debug::fmt(&cidr, f)
-            }
-        }
-    }
 }
 
 impl Display for IpCidr {

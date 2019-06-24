@@ -172,9 +172,13 @@ impl Debug for Ipv6Cidr {
         let bits = self.get_bits();
 
         if f.alternate() {
-            f.write_fmt(format_args!("Ipv6Cidr {{\n    prefix: {:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X},\n    mask: {:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X},\n    bits: {}\n}}", prefix[0], prefix[1], prefix[2], prefix[3], prefix[4], prefix[5], prefix[6], prefix[7], mask[0], mask[1], mask[2], mask[3], mask[4], mask[5], mask[6], mask[7], bits))
+            let debug_text = format!("Ipv6Cidr {{\n    prefix: {:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X},\n    mask: {:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X},\n    bits: {}\n}}", prefix[0], prefix[1], prefix[2], prefix[3], prefix[4], prefix[5], prefix[6], prefix[7], mask[0], mask[1], mask[2], mask[3], mask[4], mask[5], mask[6], mask[7], bits);
+
+            f.pad(&debug_text)
         } else {
-            f.write_fmt(format_args!("{{ prefix: {:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}, mask: {:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}, bits: {} }}", prefix[0], prefix[1], prefix[2], prefix[3], prefix[4], prefix[5], prefix[6], prefix[7], mask[0], mask[1], mask[2], mask[3], mask[4], mask[5], mask[6], mask[7], bits))
+            let debug_text = format!("Ipv6Cidr {{ prefix: {:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}, mask: {:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}, bits: {} }}", prefix[0], prefix[1], prefix[2], prefix[3], prefix[4], prefix[5], prefix[6], prefix[7], mask[0], mask[1], mask[2], mask[3], mask[4], mask[5], mask[6], mask[7], bits);
+
+            f.pad(&debug_text)
         }
     }
 }

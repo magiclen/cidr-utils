@@ -1,18 +1,12 @@
 use crate::cidr::{Ipv6Cidr, Ipv6Able};
 use std::ops::Deref;
-use std::fmt::{self, Formatter, Debug, Display};
+use std::fmt::{self, Formatter, Display};
 use core::fmt::Write;
 
 /// To combine multiple IPv6 CIDRs to supernetworks.
+#[derive(Debug)]
 pub struct Ipv6CidrCombiner {
     cidr_array: Vec<Ipv6Cidr>
-}
-
-impl Debug for Ipv6CidrCombiner {
-    #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        Debug::fmt(&self.cidr_array, f)
-    }
 }
 
 impl Display for Ipv6CidrCombiner {
