@@ -1,28 +1,14 @@
 use crate::cidr::{IpCidr, Ipv4Cidr, Ipv6Cidr};
 use crate::utils::{Ipv4CidrCombiner, Ipv6CidrCombiner};
-use std::fmt::{self, Formatter, Debug, Display};
+use std::fmt::{self, Formatter, Display};
 use core::fmt::Write;
 use std::net::IpAddr;
 
 /// To combine multiple IPv4 CIDRs and IPv6 CIDRs to supernetworks.
+#[derive(Debug)]
 pub struct IpCidrCombiner {
     ipv4: Ipv4CidrCombiner,
     ipv6: Ipv6CidrCombiner,
-}
-
-impl Debug for IpCidrCombiner {
-    #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        if f.alternate() {
-            let debug_text = format!("IpCidrCombiner {{\n    ipv4: {:#?},\n    ipv6: {:#?}\n}}", self.ipv4, self.ipv6);
-
-            f.pad(&debug_text)
-        } else {
-            let debug_text = format!("IpCidrCombiner {{ ipv4: {:?}, ipv6: {:?} }}", self.ipv4, self.ipv6);
-
-            f.pad(&debug_text)
-        }
-    }
 }
 
 impl Display for IpCidrCombiner {

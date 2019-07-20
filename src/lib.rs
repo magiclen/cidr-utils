@@ -166,6 +166,8 @@ assert_eq!("192.168.56.192/26".to_string(), result[3].to_string());
 #[macro_use]
 extern crate lazy_static;
 extern crate regex;
+#[macro_use]
+extern crate debug_helper;
 
 /// This module provides data structures for IPv4 CIDRs and IPv6 CIDRs.
 pub mod cidr;
