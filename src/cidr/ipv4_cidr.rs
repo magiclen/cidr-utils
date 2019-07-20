@@ -128,7 +128,7 @@ impl Debug for Ipv4Cidr {
         let mask = self.get_mask_as_u8_array();
         let bits = self.get_bits();
 
-        impl_debug_for_struct!(Ipv4Cidr, f, self, (.prefix, "{}.{}.{}.{}", prefix[0], prefix[1], prefix[2], prefix[3]), (.mask, "{}.{}.{}.{}", mask[0], mask[1], mask[2], mask[3]), (.bits, "{}", bits));
+        impl_debug_for_struct!(Ipv4Cidr, f, self, (.prefix, "{}.{}.{}.{}", prefix[0], prefix[1], prefix[2], prefix[3]), (.mask, "{}.{}.{}.{}", mask[0], mask[1], mask[2], mask[3]), let .bits = bits);
     }
 }
 

@@ -171,7 +171,7 @@ impl Debug for Ipv6Cidr {
         let mask = self.get_mask_as_u16_array();
         let bits = self.get_bits();
 
-        impl_debug_for_struct!(Ipv6Cidr, f, self, (.prefix, "{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}", prefix[0], prefix[1], prefix[2], prefix[3], prefix[4], prefix[5], prefix[6], prefix[7]), (.mask, "{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}", mask[0], mask[1], mask[2], mask[3], mask[4], mask[5], mask[6], mask[7]), (.bits, "{}", bits));
+        impl_debug_for_struct!(Ipv6Cidr, f, self, (.prefix, "{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}", prefix[0], prefix[1], prefix[2], prefix[3], prefix[4], prefix[5], prefix[6], prefix[7]), (.mask, "{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}", mask[0], mask[1], mask[2], mask[3], mask[4], mask[5], mask[6], mask[7]), let .bits = bits);
     }
 }
 
