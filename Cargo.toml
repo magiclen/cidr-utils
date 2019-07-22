@@ -1,6 +1,6 @@
 [package]
 name = "cidr-utils"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2018"
 repository = "https://github.com/magiclen/cidr-utils"
@@ -18,4 +18,4 @@ appveyor = { repository = "magiclen/cidr-utils", branch = "master", service = "g
 [dependencies]
 regex = "1.1.5"
 lazy_static = "1.3.0"
-debug-helper = "0.2"
+debug-helper = "0.3"
