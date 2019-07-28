@@ -11,9 +11,9 @@ description= "This crate provides data structures and functions to deal with IPv
 readme = "README.md"
 license = "MIT"
 
-[badges]
-travis-ci = { repository = "magiclen/cidr-utils", branch = "master" }
-appveyor = { repository = "magiclen/cidr-utils", branch = "master", service = "github" }
+[badges.travis-ci]
+repository = "magiclen/cidr-utils"
+branch = "master"
 
 [dependencies]
 regex = "1.1.5"

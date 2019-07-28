@@ -2,7 +2,6 @@ CIDR Utils
 ====================
 
 [![Build Status](https://travis-ci.org/magiclen/cidr-utils.svg?branch=master)](https://travis-ci.org/magiclen/cidr-utils)
-[![Build status](https://ci.appveyor.com/api/projects/status/vfrr5ofii3eo1312/branch/master?svg=true)](https://ci.appveyor.com/project/magiclen/cidr-utils/branch/master)
 
 This crate provides data structures and functions to deal with IPv4 CIDRs and IPv6 CIDRs.
 
