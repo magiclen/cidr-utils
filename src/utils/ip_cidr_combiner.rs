@@ -1,7 +1,6 @@
 use crate::cidr::{IpCidr, Ipv4Cidr, Ipv6Cidr};
 use crate::utils::{Ipv4CidrCombiner, Ipv6CidrCombiner};
-use std::fmt::{self, Formatter, Display};
-use core::fmt::Write;
+use std::fmt::{self, Display, Formatter, Write};
 use std::net::IpAddr;
 
 /// To combine multiple IPv4 CIDRs and IPv6 CIDRs to supernetworks.
@@ -48,6 +47,13 @@ impl Display for IpCidrCombiner {
     }
 }
 
+impl Default for IpCidrCombiner {
+    #[inline]
+    fn default() -> Self {
+        IpCidrCombiner::new()
+    }
+}
+
 impl IpCidrCombiner {
     #[inline]
     /// Create a new `IpCidrCombiner` instance.
@@ -68,7 +74,10 @@ impl IpCidrCombiner {
     }
 
     #[inline]
-    pub unsafe fn from_cidr_vec_unchecked(ipv4_cidr_vec: Vec<Ipv4Cidr>, ipv6_cidr_vec: Vec<Ipv6Cidr>) -> IpCidrCombiner {
+    pub unsafe fn from_cidr_vec_unchecked(
+        ipv4_cidr_vec: Vec<Ipv4Cidr>,
+        ipv6_cidr_vec: Vec<Ipv6Cidr>,
+    ) -> IpCidrCombiner {
         IpCidrCombiner {
             ipv4: Ipv4CidrCombiner::from_ipv4_cidr_vec_unchecked(ipv4_cidr_vec),
             ipv6: Ipv6CidrCombiner::from_ipv6_cidr_vec_unchecked(ipv6_cidr_vec),

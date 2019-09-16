@@ -1,6 +1,6 @@
-use std::net::Ipv6Addr;
+use std::fmt::{self, Debug, Display, Formatter};
 use std::mem::transmute;
-use std::fmt::{self, Formatter, Display, Debug};
+use std::net::Ipv6Addr;
 use std::str::FromStr;
 
 use regex::Regex;
@@ -19,19 +19,15 @@ fn subtract(a: (u128, bool), b: (u128, bool)) -> (u128, bool) {
     if a.1 {
         if b.1 {
             (0, false)
+        } else if b.0 == 0 {
+            (0, true)
         } else {
-            if b.0 == 0 {
-                (0, true)
-            } else {
-                (u128::max_value() - b.0 + 1, false)
-            }
+            (u128::max_value() - b.0 + 1, false)
         }
+    } else if b.1 {
+        unreachable!()
     } else {
-        if b.1 {
-            unreachable!()
-        } else {
-            (a.0 - b.0, false)
-        }
+        (a.0 - b.0, false)
     }
 }
 
@@ -41,8 +37,8 @@ fn get_mask(bits: u8) -> u128 {
 
     let l = (bits / 8) as usize;
 
-    for i in 0..l {
-        a[i] = 255;
+    for e in a.iter_mut().take(l) {
+        *e = 255;
     }
 
     let d = bits % 8;
@@ -51,9 +47,7 @@ fn get_mask(bits: u8) -> u128 {
         a[l] = 0xFF << (8 - d);
     }
 
-    unsafe {
-        transmute(a)
-    }
+    unsafe { transmute(a) }
 }
 
 #[inline]
@@ -65,7 +59,12 @@ fn u128_to_u8_array(uint128: u128) -> [u8; 16] {
 fn u128_to_u16_array(uint128: u128) -> [u16; 8] {
     let a = u128_to_u8_array(uint128);
 
-    unsafe { transmute([a[1], a[0], a[3], a[2], a[5], a[4], a[7], a[6], a[9], a[8], a[11], a[10], a[13], a[12], a[15], a[14]]) }
+    unsafe {
+        transmute([
+            a[1], a[0], a[3], a[2], a[5], a[4], a[7], a[6], a[9], a[8], a[11], a[10], a[13], a[12],
+            a[15], a[14],
+        ])
+    }
 }
 
 #[inline]
@@ -77,7 +76,12 @@ fn u8_array_to_u128(uint8_array: [u8; 16]) -> u128 {
 fn u16_array_to_u128(uint8_array: [u16; 8]) -> u128 {
     let a: [u8; 16] = unsafe { transmute(uint8_array) };
 
-    unsafe { transmute([a[1], a[0], a[3], a[2], a[5], a[4], a[7], a[6], a[9], a[8], a[11], a[10], a[13], a[12], a[15], a[14]]) }
+    unsafe {
+        transmute([
+            a[1], a[0], a[3], a[2], a[5], a[4], a[7], a[6], a[9], a[8], a[11], a[10], a[13], a[12],
+            a[15], a[14],
+        ])
+    }
 }
 
 #[inline]
@@ -116,7 +120,6 @@ fn mask_to_bits(mask: u128) -> Option<u8> {
 // TODO: Ipv6Able
 /// The type which can be taken as an IPv6 address.
 pub trait Ipv6Able {
-    #[inline]
     fn get_u128(&self) -> u128;
 }
 
@@ -181,7 +184,18 @@ impl Display for Ipv6Cidr {
         let prefix = self.get_prefix_as_u16_array();
         let bits = self.get_bits();
 
-        f.write_fmt(format_args!("{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}/{}", prefix[0], prefix[1], prefix[2], prefix[3], prefix[4], prefix[5], prefix[6], prefix[7], bits))
+        f.write_fmt(format_args!(
+            "{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}/{}",
+            prefix[0],
+            prefix[1],
+            prefix[2],
+            prefix[3],
+            prefix[4],
+            prefix[5],
+            prefix[6],
+            prefix[7],
+            bits
+        ))
     }
 }
 
@@ -207,6 +221,15 @@ impl Ord for Ipv6Cidr {
         }
 
         self.get_bits().cmp(&other.get_bits())
+    }
+}
+
+impl FromStr for Ipv6Cidr {
+    type Err = Ipv6CidrError;
+
+    #[inline]
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ipv6Cidr::from_str(s)
     }
 }
 
@@ -270,7 +293,10 @@ pub enum Ipv6CidrError {
 }
 
 impl Ipv6Cidr {
-    pub fn from_prefix_and_bits<P: Ipv6Able>(prefix: P, bits: u8) -> Result<Ipv6Cidr, Ipv6CidrError> {
+    pub fn from_prefix_and_bits<P: Ipv6Able>(
+        prefix: P,
+        bits: u8,
+    ) -> Result<Ipv6Cidr, Ipv6CidrError> {
         if bits > 128 {
             return Err(Ipv6CidrError::IncorrectBitsRange);
         }
@@ -285,7 +311,10 @@ impl Ipv6Cidr {
         })
     }
 
-    pub fn from_prefix_and_mask<P: Ipv6Able, M: Ipv6Able>(prefix: P, mask: M) -> Result<Ipv6Cidr, Ipv6CidrError> {
+    pub fn from_prefix_and_mask<P: Ipv6Able, M: Ipv6Able>(
+        prefix: P,
+        mask: M,
+    ) -> Result<Ipv6Cidr, Ipv6CidrError> {
         let mask = mask.get_u128();
 
         match mask_to_bits(mask) {
@@ -297,15 +326,13 @@ impl Ipv6Cidr {
                     mask,
                 })
             }
-            None => {
-                Err(Ipv6CidrError::IncorrectMask)
-            }
+            None => Err(Ipv6CidrError::IncorrectMask),
         }
     }
 
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str<S: AsRef<str>>(s: S) -> Result<Ipv6Cidr, Ipv6CidrError> {
         let s = s.as_ref();
-
 
         match RE_IPV6_CIDR.captures(s) {
             Some(c) => {
@@ -319,9 +346,7 @@ impl Ipv6Cidr {
 
                 Ipv6Cidr::from_prefix_and_bits(prefix, bits)
             }
-            None => {
-                Err(Ipv6CidrError::IncorrectIpv6CIDRString)
-            }
+            None => Err(Ipv6CidrError::IncorrectIpv6CIDRString),
         }
     }
 
@@ -381,7 +406,7 @@ impl Ipv6Cidr {
         if bits == 0 {
             (0, true)
         } else {
-            (2u128.pow((128 - self.get_bits()) as u32), false)
+            (2u128.pow(u32::from(128 - self.get_bits())), false)
         }
     }
 }
@@ -423,7 +448,10 @@ impl Iterator for Ipv6CidrU8ArrayIterator {
 
             let a = u128_to_u8_array(p);
 
-            Some([a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3], a[2], a[1], a[0]])
+            Some([
+                a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3],
+                a[2], a[1], a[0],
+            ])
         }
     }
 
@@ -470,7 +498,10 @@ impl Ipv6Cidr {
     pub fn iter_as_u8_array(&self) -> Ipv6CidrU8ArrayIterator {
         let a = self.get_prefix_as_u8_array();
 
-        let rev_from = u8_array_to_u128([a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3], a[2], a[1], a[0]]);
+        let rev_from = u8_array_to_u128([
+            a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3],
+            a[2], a[1], a[0],
+        ]);
 
         Ipv6CidrU8ArrayIterator {
             rev_from,
@@ -508,7 +539,10 @@ impl Iterator for Ipv6CidrU16ArrayIterator {
 
             let a = u128_to_u8_array(p);
 
-            Some(u128_to_u16_array(u8_array_to_u128([a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3], a[2], a[1], a[0]])))
+            Some(u128_to_u16_array(u8_array_to_u128([
+                a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3],
+                a[2], a[1], a[0],
+            ])))
         }
     }
 
@@ -551,7 +585,10 @@ impl Ipv6Cidr {
     pub fn iter_as_u16_array(&self) -> Ipv6CidrU16ArrayIterator {
         let a = self.get_prefix_as_u8_array();
 
-        let rev_from = u8_array_to_u128([a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3], a[2], a[1], a[0]]);
+        let rev_from = u8_array_to_u128([
+            a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3],
+            a[2], a[1], a[0],
+        ]);
 
         Ipv6CidrU16ArrayIterator {
             rev_from,
@@ -566,7 +603,7 @@ impl Ipv6Cidr {
 /// To iterate IPv6 CIDRs.
 #[derive(Debug)]
 pub struct Ipv6CidrIterator {
-    iter: Ipv6CidrU8ArrayIterator
+    iter: Ipv6CidrU8ArrayIterator,
 }
 
 impl Iterator for Ipv6CidrIterator {
@@ -574,24 +611,24 @@ impl Iterator for Ipv6CidrIterator {
 
     #[inline]
     fn next(&mut self) -> Option<u128> {
-        self.iter.next().map(|a| u8_array_to_u128(a))
+        self.iter.next().map(u8_array_to_u128)
     }
 
     #[inline]
     fn last(self) -> Option<u128> {
-        self.iter.last().map(|a| u8_array_to_u128(a))
+        self.iter.last().map(u8_array_to_u128)
     }
 
     #[inline]
     fn nth(&mut self, n: usize) -> Option<u128> {
-        self.iter.nth(n).map(|a| u8_array_to_u128(a))
+        self.iter.nth(n).map(u8_array_to_u128)
     }
 }
 
 impl Ipv6CidrIterator {
     #[inline]
     pub fn nth_u128(&mut self, n: (u128, bool)) -> Option<u128> {
-        self.iter.nth_u128(n).map(|a| u8_array_to_u128(a))
+        self.iter.nth_u128(n).map(u8_array_to_u128)
     }
 }
 
@@ -601,7 +638,7 @@ impl Ipv6Cidr {
         let iter = self.iter_as_u8_array();
 
         Ipv6CidrIterator {
-            iter
+            iter,
         }
     }
 }
@@ -611,7 +648,7 @@ impl Ipv6Cidr {
 /// To iterate IPv4 CIDRs.
 #[derive(Debug)]
 pub struct Ipv6CidrIpv6AddrIterator {
-    iter: Ipv6CidrU16ArrayIterator
+    iter: Ipv6CidrU16ArrayIterator,
 }
 
 impl Iterator for Ipv6CidrIpv6AddrIterator {
@@ -646,7 +683,7 @@ impl Ipv6Cidr {
         let iter = self.iter_as_u16_array();
 
         Ipv6CidrIpv6AddrIterator {
-            iter
+            iter,
         }
     }
 }

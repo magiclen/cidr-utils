@@ -1,13 +1,16 @@
 extern crate cidr_utils;
 
 use cidr_utils::cidr::Ipv4Cidr;
-use std::net::Ipv4Addr;
 use std::cmp::Ordering;
+use std::net::Ipv4Addr;
 
 #[test]
 fn from_prefix_and_mask() {
-    let cidr_1 = Ipv4Cidr::from_prefix_and_mask([192, 168, 51, 1], Ipv4Addr::new(255, 255, 255, 0)).unwrap();
-    let cidr_2 = Ipv4Cidr::from_prefix_and_mask([192, 168, 43, 1], Ipv4Addr::new(255, 255, 255, 128)).unwrap();
+    let cidr_1 =
+        Ipv4Cidr::from_prefix_and_mask([192, 168, 51, 1], Ipv4Addr::new(255, 255, 255, 0)).unwrap();
+    let cidr_2 =
+        Ipv4Cidr::from_prefix_and_mask([192, 168, 43, 1], Ipv4Addr::new(255, 255, 255, 128))
+            .unwrap();
 
     assert_eq!(24, cidr_1.get_bits());
     assert_eq!(Ipv4Addr::new(255, 255, 255, 0), cidr_1.get_mask_as_ipv4_addr());

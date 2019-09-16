@@ -1,6 +1,9 @@
 extern crate cidr_utils;
 
-use cidr_utils::{cidr::{IpCidr, Ipv4Cidr, Ipv6Cidr}, utils::IpCidrCombiner};
+use cidr_utils::{
+    cidr::{IpCidr, Ipv4Cidr, Ipv6Cidr},
+    utils::IpCidrCombiner,
+};
 
 #[test]
 fn simple_test() {
@@ -19,5 +22,8 @@ fn simple_test() {
     assert_eq!(1, combiner.get_ipv4_cidrs().len());
     assert_eq!(1, combiner.get_ipv6_cidrs().len());
     assert_eq!(Ipv4Cidr::from_str("192.168.1.100/30").unwrap(), combiner.get_ipv4_cidrs()[0]);
-    assert_eq!(Ipv6Cidr::from_str("::ffff:192.168.1.100/126").unwrap(), combiner.get_ipv6_cidrs()[0]);
+    assert_eq!(
+        Ipv6Cidr::from_str("::ffff:192.168.1.100/126").unwrap(),
+        combiner.get_ipv6_cidrs()[0]
+    );
 }

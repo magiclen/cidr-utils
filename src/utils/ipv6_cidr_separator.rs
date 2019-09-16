@@ -25,7 +25,7 @@ impl Ipv6CidrSeparator {
 
         let mut output = Vec::with_capacity(n);
 
-        if log2_n == log2_n.floor() {
+        if (log2_n - log2_n.floor()).abs() < 2.0 * std::f64::EPSILON {
             let mut iter = cidr.iter();
 
             let bits = cidr.get_bits() + log2_n as u8;
@@ -112,7 +112,7 @@ impl Ipv6CidrSeparator {
             return Some(vec![cidr.clone()]);
         }
 
-        let n = 2usize.pow((bits - cidr_bits) as u32);
+        let n = 2usize.pow(u32::from(bits - cidr_bits));
 
         let n_u128 = n as u128;
 

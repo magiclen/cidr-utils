@@ -1,12 +1,11 @@
-use crate::cidr::{Ipv6Cidr, Ipv6Able};
+use crate::cidr::{Ipv6Able, Ipv6Cidr};
+use std::fmt::{self, Display, Formatter, Write};
 use std::ops::Deref;
-use std::fmt::{self, Formatter, Display};
-use core::fmt::Write;
 
 /// To combine multiple IPv6 CIDRs to supernetworks.
 #[derive(Debug)]
 pub struct Ipv6CidrCombiner {
-    cidr_array: Vec<Ipv6Cidr>
+    cidr_array: Vec<Ipv6Cidr>,
 }
 
 impl Display for Ipv6CidrCombiner {
@@ -39,12 +38,19 @@ impl Deref for Ipv6CidrCombiner {
     }
 }
 
+impl Default for Ipv6CidrCombiner {
+    #[inline]
+    fn default() -> Self {
+        Ipv6CidrCombiner::new()
+    }
+}
+
 impl Ipv6CidrCombiner {
     #[inline]
     /// Create a new `Ipv6CidrCombiner` instance.
     pub fn new() -> Ipv6CidrCombiner {
         Ipv6CidrCombiner {
-            cidr_array: Vec::new()
+            cidr_array: Vec::new(),
         }
     }
 
@@ -52,14 +58,14 @@ impl Ipv6CidrCombiner {
     /// Create a new `Ipv6CidrCombiner` instance with a specific capacity.
     pub fn with_capacity(capacity: usize) -> Ipv6CidrCombiner {
         Ipv6CidrCombiner {
-            cidr_array: Vec::with_capacity(capacity)
+            cidr_array: Vec::with_capacity(capacity),
         }
     }
 
     #[inline]
     pub unsafe fn from_ipv6_cidr_vec_unchecked(cidr_vec: Vec<Ipv6Cidr>) -> Ipv6CidrCombiner {
         Ipv6CidrCombiner {
-            cidr_array: cidr_vec
+            cidr_array: cidr_vec,
         }
     }
 
@@ -116,8 +122,11 @@ impl Ipv6CidrCombiner {
 
                                 let d = next_prefix ^ prefix;
 
-                                if d == 1 << ((bits - 1) / 8) * 8 + 7 >> ((bits - 1) % 8) {
-                                    cidr = Ipv6Cidr::from_prefix_and_bits(prefix, bits - 1).unwrap();
+                                let bits_dec_u128 = u128::from(bits - 1);
+
+                                if d == 1 << ((bits_dec_u128 / 8) * 8 + 7) >> (bits_dec_u128 % 8) {
+                                    cidr =
+                                        Ipv6Cidr::from_prefix_and_bits(prefix, bits - 1).unwrap();
 
                                     self.cidr_array.remove(index);
 
@@ -140,12 +149,18 @@ impl Ipv6CidrCombiner {
 
                                 let d = prefix ^ previous_prefix;
 
-                                if d == 1 << ((bits - 1) / 8) * 8 + 7 >> ((bits - 1) % 8) {
+                                let bits_dec_u128 = u128::from(bits - 1);
+
+                                if d == 1 << ((bits_dec_u128 / 8) * 8 + 7) >> (bits_dec_u128 % 8) {
                                     self.cidr_array.remove(index_dec);
 
                                     index = index_dec;
 
-                                    cidr = Ipv6Cidr::from_prefix_and_bits(previous_prefix, previous_bits - 1).unwrap();
+                                    cidr = Ipv6Cidr::from_prefix_and_bits(
+                                        previous_prefix,
+                                        previous_bits - 1,
+                                    )
+                                    .unwrap();
 
                                     merging = true;
                                 }

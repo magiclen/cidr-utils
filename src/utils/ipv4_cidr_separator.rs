@@ -100,7 +100,7 @@ impl Ipv4CidrSeparator {
             return Some(vec![cidr.clone()]);
         }
 
-        let n = 2usize.pow((bits - cidr_bits) as u32);
+        let n = 2usize.pow(u32::from(bits - cidr_bits));
 
         let n_u64 = n as u64;
 
