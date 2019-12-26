@@ -161,7 +161,7 @@ impl<T: Ipv6Able> Ipv6Able for &T {
 // TODO: Ipv6Cidr
 
 /// To represent IPv6 CIDR.
-#[derive(PartialEq, Eq, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone, Hash)]
 pub struct Ipv6Cidr {
     prefix: u128,
     mask: u128,
@@ -284,7 +284,7 @@ impl Ipv6Cidr {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
 /// Possible errors of `Ipv6Cidr`.
 pub enum Ipv6CidrError {
     IncorrectBitsRange,
@@ -423,7 +423,7 @@ impl Ipv6Cidr {
 // TODO: Ipv6CidrU8ArrayIterator
 
 /// To iterate IPv6 CIDRs.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
 pub struct Ipv6CidrU8ArrayIterator {
     rev_from: u128,
     next: (u128, bool),
@@ -514,7 +514,7 @@ impl Ipv6Cidr {
 // TODO: Ipv6CidrU8ArrayIterator
 
 /// To iterate IPv6 CIDRs.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
 pub struct Ipv6CidrU16ArrayIterator {
     rev_from: u128,
     next: (u128, bool),
@@ -601,7 +601,7 @@ impl Ipv6Cidr {
 // TODO: Ipv6CidrIterator
 
 /// To iterate IPv6 CIDRs.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
 pub struct Ipv6CidrIterator {
     iter: Ipv6CidrU8ArrayIterator,
 }
@@ -646,7 +646,7 @@ impl Ipv6Cidr {
 // TODO: Ipv6CidrIpv6AddrIterator
 
 /// To iterate IPv4 CIDRs.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
 pub struct Ipv6CidrIpv6AddrIterator {
     iter: Ipv6CidrU16ArrayIterator,
 }

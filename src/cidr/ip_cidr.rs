@@ -8,7 +8,7 @@ use crate::cidr::ipv6_cidr::{Ipv6Cidr, Ipv6CidrIpv6AddrIterator};
 
 // TODO: IpCidr
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
 // The type which can be taken as an IP address.
 pub enum IpCidr {
     V4(Ipv4Cidr),
@@ -91,7 +91,7 @@ impl FromStr for IpCidr {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
 /// Possible errors of `IpCidr`.
 pub enum IpCidrError {
     IncorrectBitsRange,
@@ -178,14 +178,14 @@ impl IpCidr {
 }
 
 // TODO: IpCidrIpAddrIterator
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
 enum IpCidrIpsAddrIterator {
     V4(Ipv4CidrIpv4AddrIterator),
     V6(Ipv6CidrIpv6AddrIterator),
 }
 
 /// To iterate IP CIDRs.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
 pub struct IpCidrIpAddrIterator {
     iter: IpCidrIpsAddrIterator,
 }
