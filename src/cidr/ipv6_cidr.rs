@@ -292,6 +292,16 @@ pub enum Ipv6CidrError {
     IncorrectIpv6CIDRString,
 }
 
+impl fmt::Display for Ipv6CidrError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Ipv6CidrError::IncorrectBitsRange => write!(f, "Incorrect bits range"),
+            Ipv6CidrError::IncorrectMask => write!(f, "Incorrect mask"),
+            Ipv6CidrError::IncorrectIpv6CIDRString => write!(f, "Incorrect Ipv6CIDR string"),
+        }
+    }
+}
+
 impl Ipv6Cidr {
     pub fn from_prefix_and_bits<P: Ipv6Able>(
         prefix: P,

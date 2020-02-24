@@ -99,6 +99,16 @@ pub enum IpCidrError {
     IncorrectIpCIDRString,
 }
 
+impl fmt::Display for IpCidrError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            IpCidrError::IncorrectBitsRange => write!(f, "Incorrect bits range"),
+            IpCidrError::IncorrectMask => write!(f, "Incorrect mask"),
+            IpCidrError::IncorrectIpCIDRString => write!(f, "Incorrect IpCIDR string"),
+        }
+    }
+}
+
 impl IpCidr {
     #[allow(clippy::should_implement_trait)]
     pub fn from_str<S: AsRef<str>>(s: S) -> Result<IpCidr, IpCidrError> {
