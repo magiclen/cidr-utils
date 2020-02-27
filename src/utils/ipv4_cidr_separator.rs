@@ -1,6 +1,8 @@
 use crate::cidr::Ipv4Cidr;
 use crate::utils::Ipv4CidrCombiner;
 
+use std::cmp::Ordering;
+
 /// To divide an IPv4 CIDR into subnetworks.
 pub struct Ipv4CidrSeparator {}
 
@@ -94,10 +96,10 @@ impl Ipv4CidrSeparator {
     pub fn sub_networks(cidr: &Ipv4Cidr, bits: u8) -> Option<Vec<Ipv4Cidr>> {
         let cidr_bits = cidr.get_bits();
 
-        if cidr_bits > bits {
-            return None;
-        } else if cidr_bits == bits {
-            return Some(vec![cidr.clone()]);
+        match cidr_bits.cmp(&bits) {
+            Ordering::Greater => return None,
+            Ordering::Equal => return Some(vec![cidr.clone()]),
+            Ordering::Less => (),
         }
 
         let n = 2usize.pow(u32::from(bits - cidr_bits));

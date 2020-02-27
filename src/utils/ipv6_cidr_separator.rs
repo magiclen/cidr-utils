@@ -1,6 +1,8 @@
 use crate::cidr::Ipv6Cidr;
 use crate::utils::Ipv6CidrCombiner;
 
+use std::cmp::Ordering;
+
 /// To divide an IPv6 CIDR into subnetworks.
 pub struct Ipv6CidrSeparator {}
 
@@ -106,10 +108,10 @@ impl Ipv6CidrSeparator {
     pub fn sub_networks(cidr: &Ipv6Cidr, bits: u8) -> Option<Vec<Ipv6Cidr>> {
         let cidr_bits = cidr.get_bits();
 
-        if cidr_bits > bits {
-            return None;
-        } else if cidr_bits == bits {
-            return Some(vec![cidr.clone()]);
+        match cidr_bits.cmp(&bits) {
+            Ordering::Greater => return None,
+            Ordering::Equal => return Some(vec![cidr.clone()]),
+            Ordering::Less => (),
         }
 
         let n = 2usize.pow(u32::from(bits - cidr_bits));

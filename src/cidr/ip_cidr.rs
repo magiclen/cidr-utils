@@ -1,10 +1,11 @@
 use std::cmp::Ordering;
+use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 use std::net::IpAddr;
 use std::str::FromStr;
 
-use crate::cidr::ipv4_cidr::{Ipv4Cidr, Ipv4CidrIpv4AddrIterator};
-use crate::cidr::ipv6_cidr::{Ipv6Cidr, Ipv6CidrIpv6AddrIterator};
+use crate::cidr::ipv4_cidr::{Ipv4Cidr, Ipv4CidrError, Ipv4CidrIpv4AddrIterator};
+use crate::cidr::ipv6_cidr::{Ipv6Cidr, Ipv6CidrError, Ipv6CidrIpv6AddrIterator};
 
 // TODO: IpCidr
 
@@ -99,6 +100,21 @@ pub enum IpCidrError {
     IncorrectIpCIDRString,
 }
 
+impl Display for IpCidrError {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
+        match self {
+            IpCidrError::IncorrectBitsRange => {
+                f.write_str("The subnet size (bits) is out of range.")
+            }
+            IpCidrError::IncorrectMask => f.write_str("The mask is incorrect."),
+            IpCidrError::IncorrectIpCIDRString => f.write_str("The CIDR string is incorrect."),
+        }
+    }
+}
+
+impl Error for IpCidrError {}
+
 impl IpCidr {
     #[allow(clippy::should_implement_trait)]
     pub fn from_str<S: AsRef<str>>(s: S) -> Result<IpCidr, IpCidrError> {
@@ -106,10 +122,26 @@ impl IpCidr {
 
         match Ipv4Cidr::from_str(s) {
             Ok(cidr) => Ok(IpCidr::V4(cidr)),
-            Err(_) => {
-                match Ipv6Cidr::from_str(s) {
-                    Ok(cidr) => Ok(IpCidr::V6(cidr)),
-                    Err(_) => Err(IpCidrError::IncorrectIpCIDRString),
+            Err(err) => {
+                match err {
+                    Ipv4CidrError::IncorrectBitsRange => Err(IpCidrError::IncorrectBitsRange),
+                    Ipv4CidrError::IncorrectMask => Err(IpCidrError::IncorrectMask),
+                    Ipv4CidrError::IncorrectIpv4CIDRString => {
+                        match Ipv6Cidr::from_str(s) {
+                            Ok(cidr) => Ok(IpCidr::V6(cidr)),
+                            Err(err) => {
+                                match err {
+                                    Ipv6CidrError::IncorrectBitsRange => {
+                                        Err(IpCidrError::IncorrectBitsRange)
+                                    }
+                                    Ipv6CidrError::IncorrectMask => Err(IpCidrError::IncorrectMask),
+                                    Ipv6CidrError::IncorrectIpv6CIDRString => {
+                                        Err(IpCidrError::IncorrectIpCIDRString)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

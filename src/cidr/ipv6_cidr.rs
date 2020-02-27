@@ -1,10 +1,11 @@
+use std::cmp::Ordering;
+use std::error::Error;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::mem::transmute;
 use std::net::Ipv6Addr;
 use std::str::FromStr;
 
 use regex::Regex;
-use std::cmp::Ordering;
 
 lazy_static! {
     static ref RE_IPV6_CIDR: Regex = {
@@ -213,10 +214,10 @@ impl Ord for Ipv6Cidr {
         let b = other.first_as_u16_array();
 
         for i in 0..16 {
-            if a[i] > b[i] {
-                return Ordering::Greater;
-            } else if a[i] < b[i] {
-                return Ordering::Less;
+            let cmp_result = a[i].cmp(&b[i]);
+
+            if cmp_result != Ordering::Equal {
+                return cmp_result;
             }
         }
 
@@ -291,6 +292,23 @@ pub enum Ipv6CidrError {
     IncorrectMask,
     IncorrectIpv6CIDRString,
 }
+
+impl Display for Ipv6CidrError {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
+        match self {
+            Ipv6CidrError::IncorrectBitsRange => {
+                f.write_str("The subnet size (bits) is out of range.")
+            }
+            Ipv6CidrError::IncorrectMask => f.write_str("The mask is incorrect."),
+            Ipv6CidrError::IncorrectIpv6CIDRString => {
+                f.write_str("The CIDR (IPv6) string is incorrect.")
+            }
+        }
+    }
+}
+
+impl Error for Ipv6CidrError {}
 
 impl Ipv6Cidr {
     pub fn from_prefix_and_bits<P: Ipv6Able>(

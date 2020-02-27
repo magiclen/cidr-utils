@@ -1,10 +1,11 @@
+use std::cmp::Ordering;
+use std::error::Error;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::mem::transmute;
 use std::net::Ipv4Addr;
 use std::str::FromStr;
 
 use regex::Regex;
-use std::cmp::Ordering;
 
 lazy_static! {
     static ref RE_IPV4_CIDR: Regex = {
@@ -157,10 +158,10 @@ impl Ord for Ipv4Cidr {
         let b = other.first_as_u8_array();
 
         for i in 0..4 {
-            if a[i] > b[i] {
-                return Ordering::Greater;
-            } else if a[i] < b[i] {
-                return Ordering::Less;
+            let cmp_result = a[i].cmp(&b[i]);
+
+            if cmp_result != Ordering::Equal {
+                return cmp_result;
             }
         }
 
@@ -225,6 +226,23 @@ pub enum Ipv4CidrError {
     IncorrectMask,
     IncorrectIpv4CIDRString,
 }
+
+impl Display for Ipv4CidrError {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
+        match self {
+            Ipv4CidrError::IncorrectBitsRange => {
+                f.write_str("The subnet size (bits) is out of range.")
+            }
+            Ipv4CidrError::IncorrectMask => f.write_str("The mask is incorrect."),
+            Ipv4CidrError::IncorrectIpv4CIDRString => {
+                f.write_str("The CIDR (IPv4) string is incorrect.")
+            }
+        }
+    }
+}
+
+impl Error for Ipv4CidrError {}
 
 impl Ipv4Cidr {
     pub fn from_prefix_and_bits<P: Ipv4Able>(
