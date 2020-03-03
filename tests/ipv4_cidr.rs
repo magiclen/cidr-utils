@@ -130,6 +130,18 @@ fn contains() {
 }
 
 #[test]
+fn iter() {
+    let cidr = Ipv4Cidr::from_str("192.168.51.1/16").unwrap();
+
+    let mut iter = cidr.iter();
+
+    assert_eq!(u32::from(Ipv4Addr::new(192, 168, 0, 0)), iter.next().unwrap());
+    assert_eq!(u32::from(Ipv4Addr::new(192, 168, 0, 1)), iter.next().unwrap());
+    assert_eq!(u32::from(Ipv4Addr::new(192, 168, 0, 2)), iter.next().unwrap());
+    assert_eq!(u32::from(Ipv4Addr::new(192, 168, 255, 255)), iter.last().unwrap());
+}
+
+#[test]
 fn iter_as_ipv4_addr() {
     let cidr = Ipv4Cidr::from_str("192.168.51.1/16").unwrap();
 

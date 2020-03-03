@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::{self, Debug, Display, Formatter};
-use std::mem::transmute;
 use std::net::Ipv4Addr;
 use std::str::FromStr;
 
@@ -17,59 +16,45 @@ lazy_static! {
 
 #[inline]
 fn get_mask(bits: u8) -> u32 {
-    let mut a = [0u8; 4];
+    let mut b = 0;
 
-    let l = (bits / 8) as usize;
-
-    for e in a.iter_mut().take(l) {
-        *e = 255;
+    for _ in 0..bits {
+        b = 0x8000_0000 | (b >> 1);
     }
 
-    let d = bits % 8;
-
-    if d > 0 {
-        a[l] = 0xFF << (8 - d);
-    }
-
-    unsafe { transmute(a) }
+    b
 }
 
 #[inline]
 fn u32_to_u8_array(uint32: u32) -> [u8; 4] {
-    unsafe { transmute(uint32) }
+    uint32.to_be_bytes()
 }
 
 #[inline]
 fn u8_array_to_u32(uint8_array: [u8; 4]) -> u32 {
-    unsafe { transmute(uint8_array) }
+    u32::from_be_bytes(uint8_array)
 }
 
 #[inline]
 fn mask_to_bits(mask: u32) -> Option<u8> {
     let mut digit = 0;
-    let mut b = 32u8;
+    let mut b = 32;
 
     for _ in 0..32 {
-        let base = (3 - digit / 8) * 8;
-        let offset = digit % 8;
-        let index = base + offset;
-
-        let n = (mask << index) >> 31;
-
-        digit += 1;
+        let n = (mask << digit) >> 31;
 
         if n == 0 {
-            b = (digit - 1) as u8;
+            b = digit as u8;
             break;
         }
+
+        digit += 1;
     }
 
     for digit in digit..32 {
-        let base = (3 - digit / 8) * 8;
-        let offset = digit % 8;
-        let index = base + offset;
+        let n = (mask << digit) >> 31;
 
-        if mask << index >> 31 == 1 {
+        if n == 1 {
             return None;
         }
     }
@@ -79,6 +64,7 @@ fn mask_to_bits(mask: u32) -> Option<u8> {
 
 // TODO: Ipv4Able
 /// The type which can be taken as an IPv4 address.
+/// *An `u32` value represents an IPv4 byte array (`[u8; 4]`) in big-endian (BE) order.*
 pub trait Ipv4Able {
     fn get_u32(&self) -> u32;
 }
@@ -100,7 +86,7 @@ impl Ipv4Able for [u8; 4] {
 impl Ipv4Able for Ipv4Addr {
     #[inline]
     fn get_u32(&self) -> u32 {
-        self.octets().get_u32()
+        u8_array_to_u32(self.octets())
     }
 }
 
@@ -180,6 +166,7 @@ impl FromStr for Ipv4Cidr {
 
 impl Ipv4Cidr {
     #[inline]
+    /// Get an integer which represents the prefix an IPv4 byte array of this CIDR in big-endian (BE) order.
     pub fn get_prefix(&self) -> u32 {
         self.prefix
     }
@@ -202,6 +189,7 @@ impl Ipv4Cidr {
     }
 
     #[inline]
+    /// Get an integer which represents the mask an IPv4 byte array of this CIDR in big-endian (BE) order.
     pub fn get_mask(&self) -> u32 {
         get_mask(self.get_bits())
     }
@@ -366,6 +354,7 @@ impl Ipv4Cidr {
 
 impl Ipv4Cidr {
     #[inline]
+    /// Get an integer which represents the first IPv4 byte array of this CIDR in big-endian (BE) order.
     pub fn first(&self) -> u32 {
         self.get_prefix()
     }
@@ -381,6 +370,7 @@ impl Ipv4Cidr {
     }
 
     #[inline]
+    /// Get an integer which represents the last IPv4 byte array of this CIDR in big-endian (BE) order.
     pub fn last(&self) -> u32 {
         !self.get_mask() | self.get_prefix()
     }
@@ -417,7 +407,7 @@ impl Ipv4Cidr {
 /// To iterate IPv4 CIDRs.
 #[derive(Debug)]
 pub struct Ipv4CidrU8ArrayIterator {
-    rev_from: u32,
+    from: u32,
     next: u64,
     size: u64,
 }
@@ -430,13 +420,11 @@ impl Iterator for Ipv4CidrU8ArrayIterator {
         if self.next == self.size {
             None
         } else {
-            let p = self.rev_from + self.next as u32;
+            let p = self.from + self.next as u32;
 
             self.next += 1;
 
-            let a = u32_to_u8_array(p);
-
-            Some([a[3], a[2], a[1], a[0]])
+            Some(u32_to_u8_array(p))
         }
     }
 
@@ -467,12 +455,10 @@ impl Ipv4CidrU8ArrayIterator {
 impl Ipv4Cidr {
     #[inline]
     pub fn iter_as_u8_array(&self) -> Ipv4CidrU8ArrayIterator {
-        let a = self.get_prefix_as_u8_array();
-
-        let rev_from = u8_array_to_u32([a[3], a[2], a[1], a[0]]);
+        let from = self.first();
 
         Ipv4CidrU8ArrayIterator {
-            rev_from,
+            from,
             next: 0,
             size: self.size(),
         }

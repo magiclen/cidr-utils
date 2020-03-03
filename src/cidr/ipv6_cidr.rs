@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::{self, Debug, Display, Formatter};
-use std::mem::transmute;
 use std::net::Ipv6Addr;
 use std::str::FromStr;
 
@@ -34,83 +33,74 @@ fn subtract(a: (u128, bool), b: (u128, bool)) -> (u128, bool) {
 
 #[inline]
 fn get_mask(bits: u8) -> u128 {
-    let mut a = [0u8; 16];
+    let mut b = 0;
 
-    let l = (bits / 8) as usize;
-
-    for e in a.iter_mut().take(l) {
-        *e = 255;
+    for _ in 0..bits {
+        b = 0x8000_0000_0000_0000_0000_0000_0000_0000 | (b >> 1);
     }
 
-    let d = bits % 8;
-
-    if d > 0 {
-        a[l] = 0xFF << (8 - d);
-    }
-
-    unsafe { transmute(a) }
+    b
 }
 
 #[inline]
 fn u128_to_u8_array(uint128: u128) -> [u8; 16] {
-    unsafe { transmute(uint128) }
+    uint128.to_be_bytes()
 }
 
 #[inline]
 fn u128_to_u16_array(uint128: u128) -> [u16; 8] {
     let a = u128_to_u8_array(uint128);
 
-    unsafe {
-        transmute([
-            a[1], a[0], a[3], a[2], a[5], a[4], a[7], a[6], a[9], a[8], a[11], a[10], a[13], a[12],
-            a[15], a[14],
-        ])
+    let mut o = [0; 8];
+
+    for (i, e) in o.iter_mut().enumerate() {
+        let ii = i * 2;
+
+        *e = a[ii] as u16 * 256 + a[ii + 1] as u16;
     }
+
+    o
 }
 
 #[inline]
 fn u8_array_to_u128(uint8_array: [u8; 16]) -> u128 {
-    unsafe { transmute(uint8_array) }
+    u128::from_be_bytes(uint8_array)
 }
 
 #[inline]
-fn u16_array_to_u128(uint8_array: [u16; 8]) -> u128 {
-    let a: [u8; 16] = unsafe { transmute(uint8_array) };
+fn u16_array_to_u128(uint16_array: [u16; 8]) -> u128 {
+    let mut a = [0; 16];
 
-    unsafe {
-        transmute([
-            a[1], a[0], a[3], a[2], a[5], a[4], a[7], a[6], a[9], a[8], a[11], a[10], a[13], a[12],
-            a[15], a[14],
-        ])
+    for (i, &e) in uint16_array.iter().enumerate() {
+        let ii = i * 2;
+
+        a[ii] = (e / 256) as u8;
+        a[ii + 1] = (e % 256) as u8;
     }
+
+    u8_array_to_u128(a)
 }
 
 #[inline]
 fn mask_to_bits(mask: u128) -> Option<u8> {
     let mut digit = 0;
-    let mut b = 128u8;
+    let mut b = 128;
 
     for _ in 0..128 {
-        let base = (15 - digit / 8) * 8;
-        let offset = digit % 8;
-        let index = base + offset;
-
-        let n = (mask << index) >> 127;
-
-        digit += 1;
+        let n = (mask << digit) >> 127;
 
         if n == 0 {
-            b = (digit - 1) as u8;
+            b = digit as u8;
             break;
         }
+
+        digit += 1;
     }
 
     for digit in digit..128 {
-        let base = (15 - digit / 8) * 8;
-        let offset = digit % 8;
-        let index = base + offset;
+        let n = (mask << digit) >> 127;
 
-        if mask << index >> 127 == 1 {
+        if n == 1 {
             return None;
         }
     }
@@ -120,6 +110,7 @@ fn mask_to_bits(mask: u128) -> Option<u8> {
 
 // TODO: Ipv6Able
 /// The type which can be taken as an IPv6 address.
+/// *An `u128` value represents an IPv6 byte array (`[u8; 16]`) in big-endian (BE) order.*
 pub trait Ipv6Able {
     fn get_u128(&self) -> u128;
 }
@@ -148,7 +139,7 @@ impl Ipv6Able for [u16; 8] {
 impl Ipv6Able for Ipv6Addr {
     #[inline]
     fn get_u128(&self) -> u128 {
-        self.segments().get_u128()
+        u16_array_to_u128(self.segments())
     }
 }
 
@@ -236,6 +227,7 @@ impl FromStr for Ipv6Cidr {
 
 impl Ipv6Cidr {
     #[inline]
+    /// Get an integer which represents the prefix an IPv6 byte array of this CIDR in big-endian (BE) order.
     pub fn get_prefix(&self) -> u128 {
         self.prefix
     }
@@ -263,6 +255,7 @@ impl Ipv6Cidr {
     }
 
     #[inline]
+    /// Get an integer which represents the prefix an IPv6 byte array of this CIDR in big-endian (BE) order.
     pub fn get_mask(&self) -> u128 {
         get_mask(self.get_bits())
     }
@@ -376,6 +369,7 @@ impl Ipv6Cidr {
 
 impl Ipv6Cidr {
     #[inline]
+    /// Get an integer which represents the first IPv6 byte array of this CIDR in big-endian (BE) order.
     pub fn first(&self) -> u128 {
         self.get_prefix()
     }
@@ -396,6 +390,7 @@ impl Ipv6Cidr {
     }
 
     #[inline]
+    /// Get an integer which represents the last IPv6 byte array of this CIDR in big-endian (BE) order.
     pub fn last(&self) -> u128 {
         !self.get_mask() | self.get_prefix()
     }
@@ -443,7 +438,7 @@ impl Ipv6Cidr {
 /// To iterate IPv6 CIDRs.
 #[derive(Debug)]
 pub struct Ipv6CidrU8ArrayIterator {
-    rev_from: u128,
+    from: u128,
     next: (u128, bool),
     size: (u128, bool),
 }
@@ -456,7 +451,7 @@ impl Iterator for Ipv6CidrU8ArrayIterator {
         if self.next == self.size {
             None
         } else {
-            let p = self.rev_from + self.next.0;
+            let p = self.from + self.next.0;
 
             if self.next.0 == u128::max_value() {
                 self.next = (0, true);
@@ -464,12 +459,7 @@ impl Iterator for Ipv6CidrU8ArrayIterator {
                 self.next.0 += 1;
             }
 
-            let a = u128_to_u8_array(p);
-
-            Some([
-                a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3],
-                a[2], a[1], a[0],
-            ])
+            Some(u128_to_u8_array(p))
         }
     }
 
@@ -514,15 +504,10 @@ impl Ipv6CidrU8ArrayIterator {
 impl Ipv6Cidr {
     #[inline]
     pub fn iter_as_u8_array(&self) -> Ipv6CidrU8ArrayIterator {
-        let a = self.get_prefix_as_u8_array();
-
-        let rev_from = u8_array_to_u128([
-            a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3],
-            a[2], a[1], a[0],
-        ]);
+        let from = self.first();
 
         Ipv6CidrU8ArrayIterator {
-            rev_from,
+            from,
             next: (0, false),
             size: self.size(),
         }
@@ -534,7 +519,7 @@ impl Ipv6Cidr {
 /// To iterate IPv6 CIDRs.
 #[derive(Debug)]
 pub struct Ipv6CidrU16ArrayIterator {
-    rev_from: u128,
+    from: u128,
     next: (u128, bool),
     size: (u128, bool),
 }
@@ -547,7 +532,7 @@ impl Iterator for Ipv6CidrU16ArrayIterator {
         if self.next == self.size {
             None
         } else {
-            let p = self.rev_from + self.next.0;
+            let p = self.from + self.next.0;
 
             if self.next.0 == u128::max_value() {
                 self.next = (0, true);
@@ -555,12 +540,7 @@ impl Iterator for Ipv6CidrU16ArrayIterator {
                 self.next.0 += 1;
             }
 
-            let a = u128_to_u8_array(p);
-
-            Some(u128_to_u16_array(u8_array_to_u128([
-                a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3],
-                a[2], a[1], a[0],
-            ])))
+            Some(u128_to_u16_array(p))
         }
     }
 
@@ -601,15 +581,10 @@ impl Ipv6CidrU16ArrayIterator {
 impl Ipv6Cidr {
     #[inline]
     pub fn iter_as_u16_array(&self) -> Ipv6CidrU16ArrayIterator {
-        let a = self.get_prefix_as_u8_array();
-
-        let rev_from = u8_array_to_u128([
-            a[15], a[14], a[13], a[12], a[11], a[10], a[9], a[8], a[7], a[6], a[5], a[4], a[3],
-            a[2], a[1], a[0],
-        ]);
+        let from = self.first();
 
         Ipv6CidrU16ArrayIterator {
-            rev_from,
+            from,
             next: (0, false),
             size: self.size(),
         }

@@ -122,9 +122,7 @@ impl Ipv6CidrCombiner {
 
                                 let d = next_prefix ^ prefix;
 
-                                let bits_dec_u128 = u128::from(bits - 1);
-
-                                if d == 1 << ((bits_dec_u128 / 8) * 8 + 7) >> (bits_dec_u128 % 8) {
+                                if d == 1 << (128 - bits) as u128 {
                                     cidr =
                                         Ipv6Cidr::from_prefix_and_bits(prefix, bits - 1).unwrap();
 
@@ -149,9 +147,7 @@ impl Ipv6CidrCombiner {
 
                                 let d = prefix ^ previous_prefix;
 
-                                let bits_dec_u128 = u128::from(bits - 1);
-
-                                if d == 1 << ((bits_dec_u128 / 8) * 8 + 7) >> (bits_dec_u128 % 8) {
+                                if d == 1 << (128 - bits) as u128 {
                                     self.cidr_array.remove(index_dec);
 
                                     index = index_dec;

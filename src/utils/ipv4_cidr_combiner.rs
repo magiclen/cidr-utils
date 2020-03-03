@@ -123,9 +123,7 @@ impl Ipv4CidrCombiner {
 
                                 let d = next_prefix ^ prefix;
 
-                                let bits_dec_u32 = u32::from(bits - 1);
-
-                                if d == 1 << ((bits_dec_u32 / 8) * 8 + 7) >> (bits_dec_u32 % 8) {
+                                if d == 1 << (32 - bits) as u32 {
                                     cidr =
                                         Ipv4Cidr::from_prefix_and_bits(prefix, bits - 1).unwrap();
 
@@ -150,9 +148,7 @@ impl Ipv4CidrCombiner {
 
                                 let d = prefix ^ previous_prefix;
 
-                                let bits_dec_u32 = u32::from(bits - 1);
-
-                                if d == 1 << ((bits_dec_u32 / 8) * 8 + 7) >> (bits_dec_u32 % 8) {
+                                if d == 1 << (32 - bits) as u32 {
                                     self.cidr_array.remove(index_dec);
 
                                     index = index_dec;
