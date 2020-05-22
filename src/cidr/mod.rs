@@ -1,7 +1,13 @@
-mod ip_cidr;
-mod ipv4_cidr;
-mod ipv6_cidr;
+mod v4;
+mod v6;
 
-pub use self::ip_cidr::*;
-pub use self::ipv4_cidr::*;
-pub use self::ipv6_cidr::*;
+mod ip_cidr;
+mod ip_cidr_error;
+mod ip_cidr_iterators;
+
+pub use v4::*;
+pub use v6::*;
+
+pub use ip_cidr::*;
+pub use ip_cidr_error::*;
+pub use ip_cidr_iterators::*;

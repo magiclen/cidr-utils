@@ -1,57 +1,14 @@
-use crate::cidr::{IpCidr, Ipv4Cidr, Ipv6Cidr};
-use crate::utils::{Ipv4CidrCombiner, Ipv6CidrCombiner};
 use std::fmt::{self, Display, Formatter, Write};
 use std::net::IpAddr;
+
+use crate::cidr::{IpCidr, Ipv4Cidr, Ipv6Cidr};
+use crate::utils::{Ipv4CidrCombiner, Ipv6CidrCombiner};
 
 /// To combine multiple IPv4 CIDRs and IPv6 CIDRs to supernetworks.
 #[derive(Debug)]
 pub struct IpCidrCombiner {
     ipv4: Ipv4CidrCombiner,
     ipv6: Ipv6CidrCombiner,
-}
-
-impl Display for IpCidrCombiner {
-    #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        f.write_char('[')?;
-
-        let ipv4_length = self.ipv4.len();
-
-        if ipv4_length > 0 {
-            let length_dec = ipv4_length - 1;
-
-            for cidr in self.ipv4.iter().take(length_dec) {
-                f.write_fmt(format_args!("{}, ", cidr))?
-            }
-
-            f.write_fmt(format_args!("{}", self.ipv4[length_dec]))?;
-        }
-
-        let ipv6_length = self.ipv6.len();
-
-        if ipv6_length > 0 {
-            let length_dec = ipv6_length - 1;
-
-            if ipv4_length > 0 {
-                f.write_str(", ")?;
-            }
-
-            for cidr in self.ipv6.iter().take(length_dec) {
-                f.write_fmt(format_args!("{}, ", cidr))?
-            }
-
-            f.write_fmt(format_args!("{}", self.ipv6[length_dec]))?;
-        }
-
-        f.write_char(']')
-    }
-}
-
-impl Default for IpCidrCombiner {
-    #[inline]
-    fn default() -> Self {
-        IpCidrCombiner::new()
-    }
 }
 
 impl IpCidrCombiner {
@@ -151,5 +108,49 @@ impl IpCidrCombiner {
     #[inline]
     pub fn ipv6_size(&self) -> (u128, bool) {
         self.ipv6.size()
+    }
+}
+
+impl Display for IpCidrCombiner {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        f.write_char('[')?;
+
+        let ipv4_length = self.ipv4.len();
+
+        if ipv4_length > 0 {
+            let length_dec = ipv4_length - 1;
+
+            for cidr in self.ipv4.iter().take(length_dec) {
+                f.write_fmt(format_args!("{}, ", cidr))?
+            }
+
+            f.write_fmt(format_args!("{}", self.ipv4[length_dec]))?;
+        }
+
+        let ipv6_length = self.ipv6.len();
+
+        if ipv6_length > 0 {
+            let length_dec = ipv6_length - 1;
+
+            if ipv4_length > 0 {
+                f.write_str(", ")?;
+            }
+
+            for cidr in self.ipv6.iter().take(length_dec) {
+                f.write_fmt(format_args!("{}, ", cidr))?
+            }
+
+            f.write_fmt(format_args!("{}", self.ipv6[length_dec]))?;
+        }
+
+        f.write_char(']')
+    }
+}
+
+impl Default for IpCidrCombiner {
+    #[inline]
+    fn default() -> Self {
+        IpCidrCombiner::new()
     }
 }

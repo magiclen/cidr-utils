@@ -1,10 +1,11 @@
+use std::cmp::Ordering;
+
 use crate::cidr::Ipv6Cidr;
 use crate::utils::Ipv6CidrCombiner;
 
-use std::cmp::Ordering;
-
 /// To divide an IPv6 CIDR into subnetworks.
-pub struct Ipv6CidrSeparator {}
+#[derive(Debug)]
+pub struct Ipv6CidrSeparator;
 
 impl Ipv6CidrSeparator {
     /// Evenly divide an IPv6 CIDR into a specific number of subnetworks.

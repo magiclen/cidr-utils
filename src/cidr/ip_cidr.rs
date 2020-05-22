@@ -1,119 +1,16 @@
 use std::cmp::Ordering;
-use std::error::Error;
-use std::fmt::{self, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::net::IpAddr;
 use std::str::FromStr;
 
-use crate::cidr::ipv4_cidr::{Ipv4Cidr, Ipv4CidrError, Ipv4CidrIpv4AddrIterator};
-use crate::cidr::ipv6_cidr::{Ipv6Cidr, Ipv6CidrError, Ipv6CidrIpv6AddrIterator};
+use super::{IpCidrError, Ipv4Cidr, Ipv4CidrError, Ipv6Cidr, Ipv6CidrError};
 
-// TODO: IpCidr
-
-#[derive(Debug, PartialEq, Eq, Clone)]
 // The type which can be taken as an IP address.
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum IpCidr {
     V4(Ipv4Cidr),
     V6(Ipv6Cidr),
 }
-
-impl Display for IpCidr {
-    #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        match self {
-            IpCidr::V4(cidr) => Display::fmt(&cidr, f),
-            IpCidr::V6(cidr) => Display::fmt(&cidr, f),
-        }
-    }
-}
-
-impl PartialEq<Ipv6Cidr> for IpCidr {
-    #[inline]
-    fn eq(&self, other: &Ipv6Cidr) -> bool {
-        match self {
-            IpCidr::V4(_) => false,
-            IpCidr::V6(cidr) => cidr.eq(&other),
-        }
-    }
-}
-
-impl PartialOrd<Ipv6Cidr> for IpCidr {
-    #[inline]
-    fn partial_cmp(&self, other: &Ipv6Cidr) -> Option<Ordering> {
-        match self {
-            IpCidr::V4(_) => Some(Ordering::Less),
-            IpCidr::V6(cidr) => cidr.partial_cmp(&other),
-        }
-    }
-}
-
-impl PartialEq<Ipv4Cidr> for IpCidr {
-    #[inline]
-    fn eq(&self, other: &Ipv4Cidr) -> bool {
-        match self {
-            IpCidr::V4(cidr) => cidr.eq(&other),
-            IpCidr::V6(_) => false,
-        }
-    }
-}
-
-impl PartialOrd<Ipv4Cidr> for IpCidr {
-    #[inline]
-    fn partial_cmp(&self, other: &Ipv4Cidr) -> Option<Ordering> {
-        match self {
-            IpCidr::V4(cidr) => cidr.partial_cmp(&other),
-            IpCidr::V6(_) => Some(Ordering::Greater),
-        }
-    }
-}
-
-impl PartialOrd for IpCidr {
-    #[inline]
-    fn partial_cmp(&self, other: &IpCidr) -> Option<Ordering> {
-        Some(self.cmp(&other))
-    }
-}
-
-impl Ord for IpCidr {
-    #[inline]
-    fn cmp(&self, other: &IpCidr) -> Ordering {
-        match other {
-            IpCidr::V4(cidr) => self.partial_cmp(cidr).unwrap(),
-            IpCidr::V6(cidr) => self.partial_cmp(cidr).unwrap(),
-        }
-    }
-}
-
-impl FromStr for IpCidr {
-    type Err = IpCidrError;
-
-    #[inline]
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        IpCidr::from_str(s)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-/// Possible errors of `IpCidr`.
-pub enum IpCidrError {
-    IncorrectBitsRange,
-    IncorrectMask,
-    IncorrectIpCIDRString,
-}
-
-impl Display for IpCidrError {
-    #[inline]
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
-        match self {
-            IpCidrError::IncorrectBitsRange => {
-                f.write_str("The subnet size (bits) is out of range.")
-            }
-            IpCidrError::IncorrectMask => f.write_str("The mask is incorrect."),
-            IpCidrError::IncorrectIpCIDRString => f.write_str("The CIDR string is incorrect."),
-        }
-    }
-}
-
-impl Error for IpCidrError {}
 
 impl IpCidr {
     #[allow(clippy::should_implement_trait)]
@@ -209,66 +106,101 @@ impl IpCidr {
     }
 }
 
-// TODO: IpCidrIpAddrIterator
-#[derive(Debug)]
-enum IpCidrIpsAddrIterator {
-    V4(Ipv4CidrIpv4AddrIterator),
-    V6(Ipv6CidrIpv6AddrIterator),
-}
-
-/// To iterate IP CIDRs.
-#[derive(Debug)]
-pub struct IpCidrIpAddrIterator {
-    iter: IpCidrIpsAddrIterator,
-}
-
-impl Iterator for IpCidrIpAddrIterator {
-    type Item = IpAddr;
-
+impl Display for IpCidr {
     #[inline]
-    fn next(&mut self) -> Option<IpAddr> {
-        match &mut self.iter {
-            IpCidrIpsAddrIterator::V4(iter) => iter.next().map(IpAddr::V4),
-            IpCidrIpsAddrIterator::V6(iter) => iter.next().map(IpAddr::V6),
-        }
-    }
-
-    #[inline]
-    fn last(self) -> Option<IpAddr> {
-        match self.iter {
-            IpCidrIpsAddrIterator::V4(iter) => iter.last().map(IpAddr::V4),
-            IpCidrIpsAddrIterator::V6(iter) => iter.last().map(IpAddr::V6),
-        }
-    }
-
-    #[inline]
-    fn nth(&mut self, n: usize) -> Option<IpAddr> {
-        match &mut self.iter {
-            IpCidrIpsAddrIterator::V4(iter) => iter.nth(n).map(IpAddr::V4),
-            IpCidrIpsAddrIterator::V6(iter) => iter.nth(n).map(IpAddr::V6),
-        }
-    }
-}
-
-impl IpCidr {
-    #[inline]
-    pub fn iter_as_ip_addr(&self) -> IpCidrIpAddrIterator {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         match self {
-            IpCidr::V4(cidr) => {
-                IpCidrIpAddrIterator {
-                    iter: IpCidrIpsAddrIterator::V4(cidr.iter_as_ipv4_addr()),
-                }
-            }
-            IpCidr::V6(cidr) => {
-                IpCidrIpAddrIterator {
-                    iter: IpCidrIpsAddrIterator::V6(cidr.iter_as_ipv6_addr()),
-                }
-            }
+            IpCidr::V4(cidr) => Display::fmt(&cidr, f),
+            IpCidr::V6(cidr) => Display::fmt(&cidr, f),
         }
     }
+}
+
+impl PartialEq<Ipv4Cidr> for IpCidr {
+    #[inline]
+    fn eq(&self, other: &Ipv4Cidr) -> bool {
+        match self {
+            IpCidr::V4(cidr) => cidr.eq(other),
+            IpCidr::V6(_) => false,
+        }
+    }
+}
+
+impl PartialEq<IpCidr> for Ipv4Cidr {
+    #[inline]
+    fn eq(&self, other: &IpCidr) -> bool {
+        match other {
+            IpCidr::V4(cidr) => self.eq(cidr),
+            IpCidr::V6(_) => false,
+        }
+    }
+}
+
+impl PartialOrd<Ipv4Cidr> for IpCidr {
+    #[inline]
+    fn partial_cmp(&self, other: &Ipv4Cidr) -> Option<Ordering> {
+        match self {
+            IpCidr::V4(cidr) => cidr.partial_cmp(other),
+            IpCidr::V6(_) => Some(Ordering::Greater),
+        }
+    }
+}
+
+impl PartialOrd<IpCidr> for Ipv4Cidr {
+    #[inline]
+    fn partial_cmp(&self, other: &IpCidr) -> Option<Ordering> {
+        match other {
+            IpCidr::V4(cidr) => self.partial_cmp(cidr),
+            IpCidr::V6(_) => Some(Ordering::Less),
+        }
+    }
+}
+
+impl PartialEq<Ipv6Cidr> for IpCidr {
+    #[inline]
+    fn eq(&self, other: &Ipv6Cidr) -> bool {
+        match self {
+            IpCidr::V4(_) => false,
+            IpCidr::V6(cidr) => cidr.eq(other),
+        }
+    }
+}
+
+impl PartialEq<IpCidr> for Ipv6Cidr {
+    #[inline]
+    fn eq(&self, other: &IpCidr) -> bool {
+        match other {
+            IpCidr::V4(_) => false,
+            IpCidr::V6(cidr) => self.eq(cidr),
+        }
+    }
+}
+
+impl PartialOrd<Ipv6Cidr> for IpCidr {
+    #[inline]
+    fn partial_cmp(&self, other: &Ipv6Cidr) -> Option<Ordering> {
+        match self {
+            IpCidr::V4(_) => Some(Ordering::Less),
+            IpCidr::V6(cidr) => cidr.partial_cmp(other),
+        }
+    }
+}
+
+impl PartialOrd<IpCidr> for Ipv6Cidr {
+    #[inline]
+    fn partial_cmp(&self, other: &IpCidr) -> Option<Ordering> {
+        match other {
+            IpCidr::V4(_) => Some(Ordering::Greater),
+            IpCidr::V6(cidr) => self.partial_cmp(cidr),
+        }
+    }
+}
+
+impl FromStr for IpCidr {
+    type Err = IpCidrError;
 
     #[inline]
-    pub fn iter(&self) -> IpCidrIpAddrIterator {
-        self.iter_as_ip_addr()
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        IpCidr::from_str(s)
     }
 }

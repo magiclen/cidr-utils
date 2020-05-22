@@ -2,7 +2,8 @@ use crate::cidr::IpCidr;
 use crate::utils::{IpCidrCombiner, Ipv4CidrSeparator, Ipv6CidrSeparator};
 
 /// To divide an IP CIDR into subnetworks.
-pub struct IpCidrSeparator {}
+#[derive(Debug)]
+pub struct IpCidrSeparator;
 
 impl IpCidrSeparator {
     /// Evenly divide an IP CIDR into a specific number of subnetworks.
