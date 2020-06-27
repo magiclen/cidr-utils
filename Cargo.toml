@@ -1,6 +1,6 @@
 [package]
 name = "cidr-utils"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2018"
 repository = "https://github.com/magiclen/cidr-utils"
@@ -10,6 +10,7 @@ categories = ["parser-implementations", "data-structures", "network-programming"
 description= "This crate provides data structures and functions to deal with IPv4 CIDRs and IPv6 CIDRs."
 readme = "README.md"
 license = "MIT"
+include = ["src/**/*", "Cargo.toml"]
 
 [badges.travis-ci]
 repository = "magiclen/cidr-utils"
