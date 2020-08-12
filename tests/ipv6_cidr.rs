@@ -1,8 +1,11 @@
 extern crate cidr_utils;
 
-use cidr_utils::cidr::Ipv6Cidr;
 use std::cmp::Ordering;
 use std::net::Ipv6Addr;
+use std::str::FromStr;
+
+use cidr_utils::cidr::Ipv6Cidr;
+use cidr_utils::num_bigint::BigUint;
 
 #[test]
 fn from_prefix_and_mask() {
@@ -95,8 +98,11 @@ fn size() {
     let cidr_1 = Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFFF:0/112").unwrap();
     let cidr_2 = Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFFF:0/0").unwrap();
 
-    assert_eq!(false, cidr_1.size().1);
-    assert_eq!(true, cidr_2.size().1);
+    assert_eq!(BigUint::from(65536u128), cidr_1.size());
+    assert_eq!(
+        BigUint::from_str("340282366920938463463374607431768211456").unwrap(),
+        cidr_2.size()
+    );
 }
 
 #[test]

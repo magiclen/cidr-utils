@@ -1,7 +1,12 @@
+extern crate num_traits;
+
 use std::fmt::{self, Display, Formatter, Write};
 use std::ops::Deref;
 
 use crate::cidr::{Ipv6Able, Ipv6Cidr};
+use crate::num_bigint::BigUint;
+
+use num_traits::Zero;
 
 /// To combine multiple IPv6 CIDRs to supernetworks.
 #[derive(Debug)]
@@ -26,6 +31,7 @@ impl Ipv6CidrCombiner {
         }
     }
 
+    #[allow(clippy::missing_safety_doc)]
     #[inline]
     pub unsafe fn from_ipv6_cidr_vec_unchecked(cidr_vec: Vec<Ipv6Cidr>) -> Ipv6CidrCombiner {
         Ipv6CidrCombiner {
@@ -147,20 +153,16 @@ impl Ipv6CidrCombiner {
     }
 
     #[inline]
-    pub fn size(&self) -> (u128, bool) {
-        let mut sum = 0;
+    pub fn size(&self) -> BigUint {
+        let mut sum = BigUint::zero();
 
         for cidr in self.cidr_array.iter() {
-            let (c_sum, c_max) = cidr.size();
+            let size = cidr.size();
 
-            if c_max {
-                return (0, true);
-            }
-
-            sum += c_sum;
+            sum += size;
         }
 
-        (sum, false)
+        sum
     }
 }
 

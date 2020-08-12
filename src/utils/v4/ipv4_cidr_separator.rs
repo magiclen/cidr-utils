@@ -19,7 +19,7 @@ impl Ipv4CidrSeparator {
         } else if n == 1 {
             let mut combiner = Ipv4CidrCombiner::with_capacity(1);
 
-            combiner.push(cidr.clone());
+            combiner.push(*cidr);
 
             return Some(vec![combiner]);
         }
@@ -99,7 +99,7 @@ impl Ipv4CidrSeparator {
 
         match cidr_bits.cmp(&bits) {
             Ordering::Greater => return None,
-            Ordering::Equal => return Some(vec![cidr.clone()]),
+            Ordering::Equal => return Some(vec![*cidr]),
             Ordering::Less => (),
         }
 

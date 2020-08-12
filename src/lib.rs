@@ -163,8 +163,7 @@ assert_eq!("192.168.56.192/26".to_string(), result[3].to_string());
 ```
 */
 
-#[macro_use]
-extern crate enum_ordinalize;
+pub extern crate num_bigint;
 
 /// This module provides data structures for IPv4 CIDRs and IPv6 CIDRs.
 pub mod cidr;

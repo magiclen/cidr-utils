@@ -1,22 +1,21 @@
-extern crate debug_helper;
-extern crate lazy_static;
+extern crate once_cell;
 extern crate regex;
 
 use std::cmp::Ordering;
+use std::convert::TryFrom;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::net::Ipv4Addr;
 use std::str::FromStr;
 
+use once_cell::sync::Lazy;
+use regex::Regex;
+
 use super::functions::*;
 use super::{Ipv4Able, Ipv4CidrError};
 
-use regex::Regex;
-
-lazy_static::lazy_static! {
-    static ref RE_IPV4_CIDR: Regex = {
-        Regex::new(r"^((25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9]))?)?)?)(/((([0-9]|30|31|32)|([1-2][0-9]))|(((25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1([0-9]){1,2}|[1-9]?[0-9])))))?$").unwrap()
-    };
-}
+static RE_IPV4_CIDR: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^(?:(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])(?:\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])(?:\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])(?:\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9]))?)?)?)(?:/(?:([0-9]|30|31|32|(?:[1-2][0-9]))|(?:(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9]))))?$").unwrap()
+});
 
 /// To represent IPv4 CIDR.
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
@@ -34,7 +33,7 @@ impl Ipv4Cidr {
 
     #[inline]
     pub fn get_prefix_as_u8_array(&self) -> [u8; 4] {
-        u32_to_u8_array(self.get_prefix())
+        self.get_prefix().to_be_bytes()
     }
 
     #[inline]
@@ -57,7 +56,7 @@ impl Ipv4Cidr {
 
     #[inline]
     pub fn get_mask_as_u8_array(&self) -> [u8; 4] {
-        u32_to_u8_array(self.get_mask())
+        self.get_mask().to_be_bytes()
     }
 
     #[inline]
@@ -69,6 +68,7 @@ impl Ipv4Cidr {
 }
 
 impl Ipv4Cidr {
+    #[inline]
     pub fn from_prefix_and_bits<P: Ipv4Able>(
         prefix: P,
         bits: u8,
@@ -87,6 +87,7 @@ impl Ipv4Cidr {
         })
     }
 
+    #[inline]
     pub fn from_prefix_and_mask<P: Ipv4Able, M: Ipv4Able>(
         prefix: P,
         mask: M,
@@ -115,65 +116,49 @@ impl Ipv4Cidr {
                 let mut prefix = [0u8; 4];
                 let mut prefer_bits = None;
 
-                prefix[0] = c.get(2).unwrap().as_str().parse().unwrap();
-                match c.get(5).map(|m| m.as_str().parse().unwrap()) {
-                    Some(n) => {
-                        prefix[1] = n;
+                prefix[0] = c.get(1).unwrap().as_str().parse().unwrap();
 
-                        match c.get(8).map(|m| m.as_str().parse().unwrap()) {
-                            Some(n) => {
-                                prefix[2] = n;
-
-                                match c.get(11).map(|m| m.as_str().parse().unwrap()) {
-                                    Some(n) => {
-                                        prefix[3] = n;
-                                    }
-                                    None => {
-                                        prefer_bits = Some(24);
-                                    }
-                                }
-                            }
-                            None => {
-                                prefer_bits = Some(16);
-                            }
+                for (i, p) in prefix[1..].iter_mut().enumerate() {
+                    match c.get(i + 2).map(|m| m.as_str().parse().unwrap()) {
+                        Some(n) => {
+                            *p = n;
                         }
-                    }
-                    None => {
-                        prefer_bits = Some(8);
+                        None => {
+                            prefer_bits = Some(8 * (i as u8 + 1));
+                            break;
+                        }
                     }
                 }
 
-                if c.get(13).is_some() {
-                    if let Some(m) = c.get(15) {
-                        let bits = m.as_str().parse().unwrap();
+                if let Some(m) = c.get(5) {
+                    let bits = m.as_str().parse().unwrap();
 
-                        if let Some(prefer_bits) = prefer_bits {
-                            if bits != prefer_bits {
-                                return Err(Ipv4CidrError::IncorrectIpv4CIDRString);
-                            }
+                    if let Some(prefer_bits) = prefer_bits {
+                        if bits != prefer_bits {
+                            return Err(Ipv4CidrError::IncorrectIpv4CIDRString);
                         }
+                    }
 
-                        Ok(Ipv4Cidr::from_prefix_and_bits(prefix, bits)?)
-                    } else {
-                        let mut mask = [0u8; 4];
+                    Ok(Ipv4Cidr::from_prefix_and_bits(prefix, bits)?)
+                } else if let Some(m) = c.get(6) {
+                    let mut mask = [0u8; 4];
 
-                        mask[0] = c.get(20).unwrap().as_str().parse().unwrap();
-                        mask[1] = c.get(22).unwrap().as_str().parse().unwrap();
-                        mask[2] = c.get(24).unwrap().as_str().parse().unwrap();
-                        mask[3] = c.get(26).unwrap().as_str().parse().unwrap();
+                    mask[0] = m.as_str().parse().unwrap();
+                    mask[1] = c.get(7).unwrap().as_str().parse().unwrap();
+                    mask[2] = c.get(8).unwrap().as_str().parse().unwrap();
+                    mask[3] = c.get(9).unwrap().as_str().parse().unwrap();
 
-                        match mask_to_bits(u8_array_to_u32(mask)) {
-                            Some(bits) => {
-                                if let Some(prefer_bits) = prefer_bits {
-                                    if bits != prefer_bits {
-                                        return Err(Ipv4CidrError::IncorrectIpv4CIDRString);
-                                    }
+                    match mask_to_bits(u32::from_be_bytes(mask)) {
+                        Some(bits) => {
+                            if let Some(prefer_bits) = prefer_bits {
+                                if bits != prefer_bits {
+                                    return Err(Ipv4CidrError::IncorrectIpv4CIDRString);
                                 }
-
-                                Ipv4Cidr::from_prefix_and_mask(prefix, mask)
                             }
-                            None => Err(Ipv4CidrError::IncorrectIpv4CIDRString),
+
+                            Ipv4Cidr::from_prefix_and_mask(prefix, mask)
                         }
+                        None => Err(Ipv4CidrError::IncorrectIpv4CIDRString),
                     }
                 } else {
                     Ipv4Cidr::from_prefix_and_bits(prefix, prefer_bits.unwrap_or(32))
@@ -183,6 +168,7 @@ impl Ipv4Cidr {
         }
     }
 
+    #[inline]
     pub fn is_ipv4_cidr<S: AsRef<str>>(s: S) -> bool {
         Self::from_str(s).is_ok()
     }
@@ -213,7 +199,7 @@ impl Ipv4Cidr {
 
     #[inline]
     pub fn last_as_u8_array(&self) -> [u8; 4] {
-        u32_to_u8_array(self.last())
+        self.last().to_be_bytes()
     }
 
     #[inline]
@@ -292,6 +278,15 @@ impl FromStr for Ipv4Cidr {
 
     #[inline]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ipv4Cidr::from_str(s)
+    }
+}
+
+impl TryFrom<&str> for Ipv4Cidr {
+    type Error = Ipv4CidrError;
+
+    #[inline]
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
         Ipv4Cidr::from_str(s)
     }
 }

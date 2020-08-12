@@ -1,22 +1,23 @@
 extern crate debug_helper;
-extern crate lazy_static;
+extern crate once_cell;
 extern crate regex;
 
 use std::cmp::Ordering;
+use std::convert::TryFrom;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::net::Ipv6Addr;
 use std::str::FromStr;
 
+use crate::num_bigint::BigUint;
+use once_cell::sync::Lazy;
+use regex::Regex;
+
 use super::functions::*;
 use super::{Ipv6Able, Ipv6CidrError};
 
-use regex::Regex;
-
-lazy_static::lazy_static! {
-    static ref RE_IPV6_CIDR: Regex = {
-        Regex::new(r"^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))(/((12[0-8])|(1[0-1][0-9])|([1-9][0-9])|[0-9]))?$").unwrap()
-    };
-}
+static RE_IPV6_CIDR: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^([^/]+)(?:/((?:12[0-8])|(?:1[0-1][0-9])|(?:[1-9][0-9])|[0-9]))?$").unwrap()
+});
 
 /// To represent IPv6 CIDR.
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
@@ -34,7 +35,7 @@ impl Ipv6Cidr {
 
     #[inline]
     pub fn get_prefix_as_u8_array(&self) -> [u8; 16] {
-        u128_to_u8_array(self.get_prefix())
+        self.get_prefix().to_be_bytes()
     }
 
     #[inline]
@@ -62,7 +63,7 @@ impl Ipv6Cidr {
 
     #[inline]
     pub fn get_mask_as_u8_array(&self) -> [u8; 16] {
-        u128_to_u8_array(self.get_mask())
+        self.get_mask().to_be_bytes()
     }
 
     #[inline]
@@ -79,6 +80,7 @@ impl Ipv6Cidr {
 }
 
 impl Ipv6Cidr {
+    #[inline]
     pub fn from_prefix_and_bits<P: Ipv6Able>(
         prefix: P,
         bits: u8,
@@ -97,6 +99,7 @@ impl Ipv6Cidr {
         })
     }
 
+    #[inline]
     pub fn from_prefix_and_mask<P: Ipv6Able, M: Ipv6Able>(
         prefix: P,
         mask: M,
@@ -122,15 +125,18 @@ impl Ipv6Cidr {
 
         match RE_IPV6_CIDR.captures(s) {
             Some(c) => {
-                let prefix = Ipv6Addr::from_str(c.get(1).unwrap().as_str()).unwrap().segments();
+                match Ipv6Addr::from_str(c.get(1).unwrap().as_str()) {
+                    Ok(prefix) => {
+                        let bits: u8 = if let Some(m) = c.get(2) {
+                            m.as_str().parse().unwrap()
+                        } else {
+                            128
+                        };
 
-                let bits: u8 = if let Some(m) = c.get(32) {
-                    m.as_str().parse().unwrap()
-                } else {
-                    128
-                };
-
-                Ipv6Cidr::from_prefix_and_bits(prefix, bits)
+                        Ipv6Cidr::from_prefix_and_bits(prefix, bits)
+                    }
+                    Err(_) => Err(Ipv6CidrError::IncorrectIpv6CIDRString),
+                }
             }
             None => Err(Ipv6CidrError::IncorrectIpv6CIDRString),
         }
@@ -172,7 +178,7 @@ impl Ipv6Cidr {
 
     #[inline]
     pub fn last_as_u8_array(&self) -> [u8; 16] {
-        u128_to_u8_array(self.last())
+        self.last().to_be_bytes()
     }
 
     #[inline]
@@ -188,14 +194,8 @@ impl Ipv6Cidr {
     }
 
     #[inline]
-    pub fn size(&self) -> (u128, bool) {
-        let bits = self.get_bits();
-
-        if bits == 0 {
-            (0, true)
-        } else {
-            (2u128.pow(u32::from(128 - self.get_bits())), false)
-        }
+    pub fn size(&self) -> BigUint {
+        BigUint::from(2u8).pow(u32::from(128 - self.get_bits()))
     }
 }
 
@@ -270,6 +270,15 @@ impl FromStr for Ipv6Cidr {
 
     #[inline]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ipv6Cidr::from_str(s)
+    }
+}
+
+impl TryFrom<&str> for Ipv6Cidr {
+    type Error = Ipv6CidrError;
+
+    #[inline]
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
         Ipv6Cidr::from_str(s)
     }
 }

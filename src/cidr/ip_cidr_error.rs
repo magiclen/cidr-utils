@@ -3,7 +3,7 @@ use std::fmt::{self, Display, Formatter};
 
 use super::{Ipv4CidrError, Ipv6CidrError};
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ordinalize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 /// Possible errors of `IpCidr`.
 pub enum IpCidrError {
     IncorrectBitsRange,
@@ -14,14 +14,22 @@ pub enum IpCidrError {
 impl From<Ipv4CidrError> for IpCidrError {
     #[inline]
     fn from(error: Ipv4CidrError) -> IpCidrError {
-        unsafe { IpCidrError::from_ordinal_unsafe(error.ordinal()) }
+        match error {
+            Ipv4CidrError::IncorrectBitsRange => IpCidrError::IncorrectBitsRange,
+            Ipv4CidrError::IncorrectMask => IpCidrError::IncorrectMask,
+            Ipv4CidrError::IncorrectIpv4CIDRString => IpCidrError::IncorrectIpCIDRString,
+        }
     }
 }
 
 impl From<Ipv6CidrError> for IpCidrError {
     #[inline]
     fn from(error: Ipv6CidrError) -> IpCidrError {
-        unsafe { IpCidrError::from_ordinal_unsafe(error.ordinal()) }
+        match error {
+            Ipv6CidrError::IncorrectBitsRange => IpCidrError::IncorrectBitsRange,
+            Ipv6CidrError::IncorrectMask => IpCidrError::IncorrectMask,
+            Ipv6CidrError::IncorrectIpv6CIDRString => IpCidrError::IncorrectIpCIDRString,
+        }
     }
 }
 

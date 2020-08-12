@@ -2,6 +2,7 @@ use std::fmt::{self, Display, Formatter, Write};
 use std::net::IpAddr;
 
 use crate::cidr::{IpCidr, Ipv4Cidr, Ipv6Cidr};
+use crate::num_bigint::BigUint;
 use crate::utils::{Ipv4CidrCombiner, Ipv6CidrCombiner};
 
 /// To combine multiple IPv4 CIDRs and IPv6 CIDRs to supernetworks.
@@ -30,6 +31,7 @@ impl IpCidrCombiner {
         }
     }
 
+    #[allow(clippy::missing_safety_doc)]
     #[inline]
     pub unsafe fn from_cidr_vec_unchecked(
         ipv4_cidr_vec: Vec<Ipv4Cidr>,
@@ -106,7 +108,7 @@ impl IpCidrCombiner {
     }
 
     #[inline]
-    pub fn ipv6_size(&self) -> (u128, bool) {
+    pub fn ipv6_size(&self) -> BigUint {
         self.ipv6.size()
     }
 }

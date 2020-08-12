@@ -18,7 +18,7 @@ impl Ipv6Able for u128 {
 impl Ipv6Able for [u8; 16] {
     #[inline]
     fn get_u128(&self) -> u128 {
-        u8_array_to_u128(*self)
+        u128::from_be_bytes(*self)
     }
 }
 

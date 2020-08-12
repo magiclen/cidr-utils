@@ -26,6 +26,7 @@ impl Ipv4CidrCombiner {
         }
     }
 
+    #[allow(clippy::missing_safety_doc)]
     #[inline]
     pub unsafe fn from_ipv4_cidr_vec_unchecked(cidr_vec: Vec<Ipv4Cidr>) -> Ipv4CidrCombiner {
         Ipv4CidrCombiner {

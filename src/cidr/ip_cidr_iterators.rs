@@ -43,6 +43,24 @@ impl Iterator for IpCidrIpAddrIterator {
     }
 }
 
+impl DoubleEndedIterator for IpCidrIpAddrIterator {
+    #[inline]
+    fn next_back(&mut self) -> Option<IpAddr> {
+        match &mut self.iter {
+            IpCidrIpsAddrIterator::V4(iter) => iter.next_back().map(IpAddr::V4),
+            IpCidrIpsAddrIterator::V6(iter) => iter.next_back().map(IpAddr::V6),
+        }
+    }
+
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Option<IpAddr> {
+        match &mut self.iter {
+            IpCidrIpsAddrIterator::V4(iter) => iter.nth_back(n).map(IpAddr::V4),
+            IpCidrIpsAddrIterator::V6(iter) => iter.nth_back(n).map(IpAddr::V6),
+        }
+    }
+}
+
 impl IpCidr {
     #[inline]
     pub fn iter_as_ip_addr(&self) -> IpCidrIpAddrIterator {

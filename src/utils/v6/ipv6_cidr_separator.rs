@@ -1,7 +1,12 @@
+extern crate num_traits;
+
 use std::cmp::Ordering;
 
 use crate::cidr::Ipv6Cidr;
+use crate::num_bigint::BigUint;
 use crate::utils::Ipv6CidrCombiner;
+
+use num_traits::{One, ToPrimitive};
 
 /// To divide an IPv6 CIDR into subnetworks.
 #[derive(Debug)]
@@ -12,14 +17,14 @@ impl Ipv6CidrSeparator {
     pub fn divide_by(cidr: &Ipv6Cidr, n: usize) -> Option<Vec<Ipv6CidrCombiner>> {
         let size = cidr.size();
 
-        let n_u128 = n as u128;
+        let n_big_int = BigUint::from(n);
 
-        if n == 0 || (!size.1 && n_u128 > size.0) {
+        if n == 0 || n_big_int > size {
             return None;
         } else if n == 1 {
             let mut combiner = Ipv6CidrCombiner::with_capacity(1);
 
-            combiner.push(cidr.clone());
+            combiner.push(*cidr);
 
             return Some(vec![combiner]);
         }
@@ -33,16 +38,12 @@ impl Ipv6CidrSeparator {
 
             let bits = cidr.get_bits() + log2_n as u8;
 
-            let usize_max_u128 = usize::max_value() as u128;
+            let usize_max_big_int = BigUint::from(usize::max_value());
 
-            let d = if size.1 {
-                u128::max_value() / n_u128 + 1
-            } else {
-                size.0 / n_u128
-            };
+            let d = size / n_big_int;
 
-            if d <= usize_max_u128 {
-                for ip in iter.step_by(d as usize) {
+            if d <= usize_max_big_int {
+                for ip in iter.step_by(d.to_usize().unwrap()) {
                     let mut combiner = Ipv6CidrCombiner::with_capacity(1);
 
                     combiner.push(Ipv6Cidr::from_prefix_and_bits(ip, bits).unwrap());
@@ -50,7 +51,7 @@ impl Ipv6CidrSeparator {
                     output.push(combiner);
                 }
             } else {
-                let nth = d - 1;
+                let nth = d - BigUint::one();
 
                 if let Some(ip) = iter.next() {
                     let mut combiner = Ipv6CidrCombiner::with_capacity(1);
@@ -59,7 +60,7 @@ impl Ipv6CidrSeparator {
 
                     output.push(combiner);
 
-                    while let Some(ip) = iter.nth_u128((nth, false)) {
+                    while let Some(ip) = iter.nth_big_uint(nth.clone()) {
                         let mut combiner = Ipv6CidrCombiner::with_capacity(1);
 
                         combiner.push(Ipv6Cidr::from_prefix_and_bits(ip, bits).unwrap());
@@ -69,17 +70,13 @@ impl Ipv6CidrSeparator {
                 }
             }
         } else {
-            let d = if size.1 {
-                u128::max_value() / n_u128
-            } else {
-                size.0 / n_u128
-            };
+            let d = size / n_big_int;
 
             let iter = cidr.iter();
 
             let mut current_combiner = Ipv6CidrCombiner::new();
 
-            let mut i = 1;
+            let mut i = BigUint::one();
 
             for ip in iter {
                 current_combiner.push(Ipv6Cidr::from_prefix_and_bits(ip, 128).unwrap());
@@ -89,9 +86,9 @@ impl Ipv6CidrSeparator {
 
                     current_combiner = Ipv6CidrCombiner::new();
 
-                    i = 1;
+                    i = BigUint::one();
                 } else {
-                    i += 1;
+                    i += BigUint::one();
                 }
             }
 
@@ -111,39 +108,35 @@ impl Ipv6CidrSeparator {
 
         match cidr_bits.cmp(&bits) {
             Ordering::Greater => return None,
-            Ordering::Equal => return Some(vec![cidr.clone()]),
+            Ordering::Equal => return Some(vec![*cidr]),
             Ordering::Less => (),
         }
 
         let n = 2usize.pow(u32::from(bits - cidr_bits));
 
-        let n_u128 = n as u128;
+        let n_big_int = BigUint::from(n);
 
         let mut output = Vec::with_capacity(n);
 
         let size = cidr.size();
 
-        let d = if size.1 {
-            u128::max_value() / n_u128 + 1
-        } else {
-            size.0 / n_u128
-        };
+        let d = size / n_big_int;
 
         let mut iter = cidr.iter();
 
-        let usize_max_u128 = usize::max_value() as u128;
+        let usize_max_big_int = BigUint::from(usize::max_value());
 
-        if d <= usize_max_u128 {
-            for ip in iter.step_by(d as usize) {
+        if d <= usize_max_big_int {
+            for ip in iter.step_by(d.to_usize().unwrap()) {
                 output.push(Ipv6Cidr::from_prefix_and_bits(ip, bits).unwrap());
             }
         } else {
-            let nth = d - 1;
+            let nth = d - BigUint::one();
 
             if let Some(ip) = iter.next() {
                 output.push(Ipv6Cidr::from_prefix_and_bits(ip, bits).unwrap());
 
-                while let Some(ip) = iter.nth_u128((nth, false)) {
+                while let Some(ip) = iter.nth_big_uint(nth.clone()) {
                     output.push(Ipv6Cidr::from_prefix_and_bits(ip, bits).unwrap());
                 }
             }

@@ -1,4 +1,10 @@
+extern crate num_traits;
+
 use std::net::Ipv6Addr;
+
+use crate::num_bigint::BigUint;
+
+use num_traits::{One, ToPrimitive, Zero};
 
 use super::functions::*;
 use super::Ipv6Cidr;
@@ -9,65 +15,101 @@ use super::Ipv6Cidr;
 #[derive(Debug)]
 pub struct Ipv6CidrU8ArrayIterator {
     from: u128,
-    next: (u128, bool),
-    size: (u128, bool),
+    next: BigUint,
+    back: BigUint,
+    size: BigUint,
+}
+
+impl Ipv6CidrU8ArrayIterator {
+    #[inline]
+    unsafe fn next_unchecked(&mut self) -> [u8; 16] {
+        let p = self.from + self.next.to_u128().unwrap();
+
+        self.next += BigUint::one();
+
+        p.to_be_bytes()
+    }
+
+    #[inline]
+    unsafe fn next_back_unchecked(&mut self) -> [u8; 16] {
+        self.back -= BigUint::one();
+
+        let p = self.from + self.back.to_u128().unwrap();
+
+        p.to_be_bytes()
+    }
+
+    #[inline]
+    pub fn nth_big_uint(&mut self, n: BigUint) -> Option<[u8; 16]> {
+        self.next += n;
+
+        if self.next < self.back {
+            Some(unsafe { self.next_unchecked() })
+        } else {
+            self.next = self.size.clone();
+
+            None
+        }
+    }
+
+    #[inline]
+    pub fn nth_back_big_uint(&mut self, n: BigUint) -> Option<[u8; 16]> {
+        if self.back > n {
+            self.back -= n;
+
+            if self.next < self.back {
+                return Some(unsafe { self.next_unchecked() });
+            }
+        }
+
+        self.next = self.size.clone();
+
+        None
+    }
 }
 
 impl Iterator for Ipv6CidrU8ArrayIterator {
     type Item = [u8; 16];
 
     #[inline]
-    fn next(&mut self) -> Option<[u8; 16]> {
-        if self.next == self.size {
-            None
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.next < self.back {
+            Some(unsafe { self.next_unchecked() })
         } else {
-            let p = self.from + self.next.0;
-
-            if self.next.0 == u128::max_value() {
-                self.next = (0, true);
-            } else {
-                self.next.0 += 1;
-            }
-
-            Some(u128_to_u8_array(p))
+            None
         }
     }
 
     #[inline]
-    fn last(mut self) -> Option<[u8; 16]> {
-        self.next = (self.size.0 - 1, self.size.1);
+    fn last(mut self) -> Option<Self::Item> {
+        if self.next < self.back {
+            self.next = self.back.clone() - BigUint::one();
 
-        self.next()
+            Some(unsafe { self.next_unchecked() })
+        } else {
+            None
+        }
     }
 
     #[inline]
-    fn nth(&mut self, n: usize) -> Option<[u8; 16]> {
-        self.nth_u128((n as u128, false))
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.nth_big_uint(BigUint::from(n))
     }
 }
 
-impl Ipv6CidrU8ArrayIterator {
+impl DoubleEndedIterator for Ipv6CidrU8ArrayIterator {
     #[inline]
-    pub fn nth_u128(&mut self, n: (u128, bool)) -> Option<[u8; 16]> {
-        if n.1 {
-            self.next = self.size;
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.next < self.back {
+            Some(unsafe { self.next_back_unchecked() })
         } else {
-            let d = subtract(self.size, self.next);
-
-            if d.1 {
-                self.next.0 += n.0;
-            } else {
-                let n = n.0.min(d.0);
-
-                if u128::max_value() - n < self.next.0 {
-                    self.next = self.size;
-                } else {
-                    self.next.0 += n;
-                }
-            }
+            None
         }
+    }
 
-        self.next()
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        self.nth_back_big_uint(BigUint::from(n))
     }
 }
 
@@ -75,11 +117,13 @@ impl Ipv6Cidr {
     #[inline]
     pub fn iter_as_u8_array(&self) -> Ipv6CidrU8ArrayIterator {
         let from = self.first();
+        let size = self.size();
 
         Ipv6CidrU8ArrayIterator {
             from,
-            next: (0, false),
-            size: self.size(),
+            next: BigUint::zero(),
+            back: size.clone(),
+            size,
         }
     }
 }
@@ -90,61 +134,101 @@ impl Ipv6Cidr {
 #[derive(Debug)]
 pub struct Ipv6CidrU16ArrayIterator {
     from: u128,
-    next: (u128, bool),
-    size: (u128, bool),
+    next: BigUint,
+    back: BigUint,
+    size: BigUint,
+}
+
+impl Ipv6CidrU16ArrayIterator {
+    #[inline]
+    unsafe fn next_unchecked(&mut self) -> [u16; 8] {
+        let p = self.from + self.next.to_u128().unwrap();
+
+        self.next += BigUint::one();
+
+        u128_to_u16_array(p)
+    }
+
+    #[inline]
+    unsafe fn next_back_unchecked(&mut self) -> [u16; 8] {
+        self.back -= BigUint::one();
+
+        let p = self.from + self.back.to_u128().unwrap();
+
+        u128_to_u16_array(p)
+    }
+
+    #[inline]
+    pub fn nth_big_uint(&mut self, n: BigUint) -> Option<[u16; 8]> {
+        self.next += n;
+
+        if self.next < self.back {
+            Some(unsafe { self.next_unchecked() })
+        } else {
+            self.next = self.size.clone();
+
+            None
+        }
+    }
+
+    #[inline]
+    pub fn nth_back_big_uint(&mut self, n: BigUint) -> Option<[u16; 8]> {
+        if self.back > n {
+            self.back -= n;
+
+            if self.next < self.back {
+                return Some(unsafe { self.next_unchecked() });
+            }
+        }
+
+        self.next = self.size.clone();
+
+        None
+    }
 }
 
 impl Iterator for Ipv6CidrU16ArrayIterator {
     type Item = [u16; 8];
 
     #[inline]
-    fn next(&mut self) -> Option<[u16; 8]> {
-        if self.next == self.size {
-            None
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.next < self.back {
+            Some(unsafe { self.next_unchecked() })
         } else {
-            let p = self.from + self.next.0;
-
-            if self.next.0 == u128::max_value() {
-                self.next = (0, true);
-            } else {
-                self.next.0 += 1;
-            }
-
-            Some(u128_to_u16_array(p))
+            None
         }
     }
 
     #[inline]
-    fn last(mut self) -> Option<[u16; 8]> {
-        self.next = (self.size.0 - 1, self.size.1);
+    fn last(mut self) -> Option<Self::Item> {
+        if self.next < self.back {
+            self.next = self.back.clone() - BigUint::one();
 
-        self.next()
+            Some(unsafe { self.next_unchecked() })
+        } else {
+            None
+        }
     }
 
     #[inline]
-    fn nth(&mut self, n: usize) -> Option<[u16; 8]> {
-        self.nth_u128((n as u128, false))
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.nth_big_uint(BigUint::from(n))
     }
 }
 
-impl Ipv6CidrU16ArrayIterator {
+impl DoubleEndedIterator for Ipv6CidrU16ArrayIterator {
     #[inline]
-    pub fn nth_u128(&mut self, n: (u128, bool)) -> Option<[u16; 8]> {
-        if n.1 {
-            self.next = self.size;
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.next < self.back {
+            Some(unsafe { self.next_back_unchecked() })
         } else {
-            let d = subtract(self.size, self.next);
-
-            if d.1 {
-                self.next.0 += n.0;
-            } else {
-                let n = n.0.min(d.0);
-
-                self.next.0 += n;
-            }
+            None
         }
+    }
 
-        self.next()
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        self.nth_back_big_uint(BigUint::from(n))
     }
 }
 
@@ -152,11 +236,13 @@ impl Ipv6Cidr {
     #[inline]
     pub fn iter_as_u16_array(&self) -> Ipv6CidrU16ArrayIterator {
         let from = self.first();
+        let size = self.size();
 
         Ipv6CidrU16ArrayIterator {
             from,
-            next: (0, false),
-            size: self.size(),
+            next: BigUint::zero(),
+            back: size.clone(),
+            size,
         }
     }
 }
@@ -169,29 +255,46 @@ pub struct Ipv6CidrIterator {
     iter: Ipv6CidrU8ArrayIterator,
 }
 
+impl Ipv6CidrIterator {
+    #[inline]
+    pub fn nth_big_uint(&mut self, n: BigUint) -> Option<u128> {
+        self.iter.nth_big_uint(n).map(u128::from_be_bytes)
+    }
+
+    #[inline]
+    pub fn nth_back_big_uint(&mut self, n: BigUint) -> Option<u128> {
+        self.iter.nth_back_big_uint(n).map(u128::from_be_bytes)
+    }
+}
+
 impl Iterator for Ipv6CidrIterator {
     type Item = u128;
 
     #[inline]
     fn next(&mut self) -> Option<u128> {
-        self.iter.next().map(u8_array_to_u128)
+        self.iter.next().map(u128::from_be_bytes)
     }
 
     #[inline]
     fn last(self) -> Option<u128> {
-        self.iter.last().map(u8_array_to_u128)
+        self.iter.last().map(u128::from_be_bytes)
     }
 
     #[inline]
     fn nth(&mut self, n: usize) -> Option<u128> {
-        self.iter.nth(n).map(u8_array_to_u128)
+        self.iter.nth(n).map(u128::from_be_bytes)
     }
 }
 
-impl Ipv6CidrIterator {
+impl DoubleEndedIterator for Ipv6CidrIterator {
     #[inline]
-    pub fn nth_u128(&mut self, n: (u128, bool)) -> Option<u128> {
-        self.iter.nth_u128(n).map(u8_array_to_u128)
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(u128::from_be_bytes)
+    }
+
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth_back(n).map(u128::from_be_bytes)
     }
 }
 
@@ -214,6 +317,22 @@ pub struct Ipv6CidrIpv6AddrIterator {
     iter: Ipv6CidrU16ArrayIterator,
 }
 
+impl Ipv6CidrIpv6AddrIterator {
+    #[inline]
+    pub fn nth_big_int(&mut self, n: BigUint) -> Option<Ipv6Addr> {
+        self.iter
+            .nth_big_uint(n)
+            .map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+    }
+
+    #[inline]
+    pub fn nth_back_big_int(&mut self, n: BigUint) -> Option<Ipv6Addr> {
+        self.iter
+            .nth_back_big_uint(n)
+            .map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+    }
+}
+
 impl Iterator for Ipv6CidrIpv6AddrIterator {
     type Item = Ipv6Addr;
 
@@ -233,10 +352,15 @@ impl Iterator for Ipv6CidrIpv6AddrIterator {
     }
 }
 
-impl Ipv6CidrIpv6AddrIterator {
+impl DoubleEndedIterator for Ipv6CidrIpv6AddrIterator {
     #[inline]
-    pub fn nth_u128(&mut self, n: (u128, bool)) -> Option<Ipv6Addr> {
-        self.iter.nth_u128(n).map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+    }
+
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth_back(n).map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
     }
 }
 

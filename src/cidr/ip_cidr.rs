@@ -1,7 +1,10 @@
 use std::cmp::Ordering;
+use std::convert::TryFrom;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::net::IpAddr;
 use std::str::FromStr;
+
+use crate::num_bigint::BigUint;
 
 use super::{IpCidrError, Ipv4Cidr, Ipv4CidrError, Ipv6Cidr, Ipv6CidrError};
 
@@ -78,9 +81,9 @@ impl IpCidr {
     }
 
     #[inline]
-    pub fn size(&self) -> (u128, bool) {
+    pub fn size(&self) -> BigUint {
         match self {
-            IpCidr::V4(cidr) => (u128::from(cidr.size()), false),
+            IpCidr::V4(cidr) => BigUint::from(cidr.size()),
             IpCidr::V6(cidr) => cidr.size(),
         }
     }
@@ -201,6 +204,15 @@ impl FromStr for IpCidr {
 
     #[inline]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        IpCidr::from_str(s)
+    }
+}
+
+impl TryFrom<&str> for IpCidr {
+    type Error = IpCidrError;
+
+    #[inline]
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
         IpCidr::from_str(s)
     }
 }

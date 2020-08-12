@@ -1,6 +1,6 @@
 [package]
 name = "cidr-utils"
-version = "0.4.3"
+version = "0.5.0"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2018"
 repository = "https://github.com/magiclen/cidr-utils"
@@ -18,6 +18,9 @@ branch = "master"
 
 [dependencies]
 regex = "1"
-lazy_static = "1.4"
+once_cell = "1"
+
+num-traits = "0.2"
+num-bigint = "0.3"
+
 debug-helper = "0.3"
-enum-ordinalize = "3.1"

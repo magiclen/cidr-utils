@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ordinalize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 /// Possible errors of `Ipv6Cidr`.
 pub enum Ipv6CidrError {
     IncorrectBitsRange,
