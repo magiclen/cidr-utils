@@ -152,3 +152,27 @@ fn iter_as_ipv4_addr() {
     assert_eq!(Ipv4Addr::new(192, 168, 0, 2), iter.next().unwrap());
     assert_eq!(Ipv4Addr::new(192, 168, 255, 255), iter.last().unwrap());
 }
+
+#[test]
+fn iter_rev() {
+    let cidr = Ipv4Cidr::from_str("192.168.51.1/16").unwrap();
+
+    let mut iter = cidr.iter().rev();
+
+    assert_eq!(u32::from(Ipv4Addr::new(192, 168, 255, 255)), iter.next().unwrap());
+    assert_eq!(u32::from(Ipv4Addr::new(192, 168, 255, 254)), iter.next().unwrap());
+    assert_eq!(u32::from(Ipv4Addr::new(192, 168, 255, 253)), iter.next().unwrap());
+    assert_eq!(u32::from(Ipv4Addr::new(192, 168, 0, 0)), iter.last().unwrap());
+}
+
+#[test]
+fn iter_rev_as_ipv4_addr() {
+    let cidr = Ipv4Cidr::from_str("192.168.51.1/16").unwrap();
+
+    let mut iter = cidr.iter_as_ipv4_addr().rev();
+
+    assert_eq!(Ipv4Addr::new(192, 168, 255, 255), iter.next().unwrap());
+    assert_eq!(Ipv4Addr::new(192, 168, 255, 254), iter.next().unwrap());
+    assert_eq!(Ipv4Addr::new(192, 168, 255, 253), iter.next().unwrap());
+    assert_eq!(Ipv4Addr::new(192, 168, 0, 0), iter.last().unwrap());
+}

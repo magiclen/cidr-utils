@@ -25,9 +25,9 @@ impl Ipv4CidrU8ArrayIterator {
 
     #[inline]
     unsafe fn next_back_unchecked(&mut self) -> [u8; 4] {
-        let p = self.from + self.back as u32 - 1;
-
         self.back -= 1;
+
+        let p = self.from + self.back as u32;
 
         p.to_be_bytes()
     }
@@ -51,7 +51,7 @@ impl Ipv4CidrU8ArrayIterator {
             self.back -= n;
 
             if self.next < self.back {
-                return Some(unsafe { self.next_unchecked() });
+                return Some(unsafe { self.next_back_unchecked() });
             }
         }
 
@@ -91,13 +91,11 @@ impl Iterator for Ipv4CidrU8ArrayIterator {
         target_pointer_width = "32"
     )))]
     #[inline]
-    fn count(mut self) -> usize
+    fn count(self) -> usize
     where
         Self: Sized, {
         if self.next < self.back {
             let remaining_ips = (self.back - self.next) as usize;
-
-            self.next = self.back;
 
             remaining_ips
         } else {

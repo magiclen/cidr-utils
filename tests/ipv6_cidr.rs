@@ -147,3 +147,27 @@ fn iter_as_ipv6_addr() {
     assert_eq!(Ipv6Addr::new(0, 0, 0, 0, 0, 65535, 65535, 2), iter.next().unwrap());
     assert_eq!(Ipv6Addr::new(0, 0, 0, 0, 0, 65535, 65535, 65535), iter.last().unwrap());
 }
+
+#[test]
+fn iter_rev() {
+    let cidr = Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFFF:0/112").unwrap();
+
+    let mut iter = cidr.iter().rev();
+
+    assert_eq!(u128::from(Ipv6Addr::new(0, 0, 0, 0, 0, 65535, 65535, 65535)), iter.next().unwrap());
+    assert_eq!(u128::from(Ipv6Addr::new(0, 0, 0, 0, 0, 65535, 65535, 65534)), iter.next().unwrap());
+    assert_eq!(u128::from(Ipv6Addr::new(0, 0, 0, 0, 0, 65535, 65535, 65533)), iter.next().unwrap());
+    assert_eq!(u128::from(Ipv6Addr::new(0, 0, 0, 0, 0, 65535, 65535, 0)), iter.last().unwrap());
+}
+
+#[test]
+fn iter_rev_as_ipv6_addr() {
+    let cidr = Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFFF:0/112").unwrap();
+
+    let mut iter = cidr.iter_as_ipv6_addr().rev();
+
+    assert_eq!(Ipv6Addr::new(0, 0, 0, 0, 0, 65535, 65535, 65535), iter.next().unwrap());
+    assert_eq!(Ipv6Addr::new(0, 0, 0, 0, 0, 65535, 65535, 65534), iter.next().unwrap());
+    assert_eq!(Ipv6Addr::new(0, 0, 0, 0, 0, 65535, 65535, 65533), iter.next().unwrap());
+    assert_eq!(Ipv6Addr::new(0, 0, 0, 0, 0, 65535, 65535, 0), iter.last().unwrap());
+}

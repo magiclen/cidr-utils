@@ -58,7 +58,7 @@ impl Ipv6CidrU8ArrayIterator {
             self.back -= n;
 
             if self.next < self.back {
-                return Some(unsafe { self.next_unchecked() });
+                return Some(unsafe { self.next_back_unchecked() });
             }
         }
 
@@ -177,7 +177,7 @@ impl Ipv6CidrU16ArrayIterator {
             self.back -= n;
 
             if self.next < self.back {
-                return Some(unsafe { self.next_unchecked() });
+                return Some(unsafe { self.next_back_unchecked() });
             }
         }
 
