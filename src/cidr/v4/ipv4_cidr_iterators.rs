@@ -95,9 +95,7 @@ impl Iterator for Ipv4CidrU8ArrayIterator {
     where
         Self: Sized, {
         if self.next < self.back {
-            let remaining_ips = (self.back - self.next) as usize;
-
-            remaining_ips
+            (self.back - self.next) as usize
         } else {
             0
         }
