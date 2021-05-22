@@ -164,6 +164,16 @@ assert_eq!("192.168.56.128/26".to_string(), result[2].to_string());
 assert_eq!("192.168.56.192/26".to_string(), result[3].to_string());
 ```
 
+## Serde Support
+
+Enable the `serde` feature to support the serde framework.
+
+```toml
+[dependencies.cidr-utils]
+version = "*"
+features = ["serde"]
+```
+
 ## Crates.io
 
 https://crates.io/crates/cidr-utils

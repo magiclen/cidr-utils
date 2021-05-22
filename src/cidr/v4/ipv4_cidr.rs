@@ -1,6 +1,9 @@
 extern crate once_cell;
 extern crate regex;
 
+#[cfg(feature = "serde")]
+extern crate serde;
+
 use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::fmt::{self, Debug, Display, Formatter};
@@ -9,6 +12,12 @@ use std::str::FromStr;
 
 use once_cell::sync::Lazy;
 use regex::Regex;
+
+#[cfg(feature = "serde")]
+use serde::ser::{Serialize, Serializer};
+
+#[cfg(feature = "serde")]
+use serde::de::{Deserialize, Deserializer, Error as DeError, Visitor};
 
 use super::functions::*;
 use super::{Ipv4Able, Ipv4CidrError};
@@ -288,5 +297,43 @@ impl TryFrom<&str> for Ipv4Cidr {
     #[inline]
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         Ipv4Cidr::from_str(s)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for Ipv4Cidr {
+    #[inline]
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer, {
+        serializer.serialize_str(self.to_string().as_str())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for Ipv4Cidr {
+    #[inline]
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>, {
+        struct Ipv4Visitor;
+
+        impl<'de> Visitor<'de> for Ipv4Visitor {
+            type Value = Ipv4Cidr;
+
+            #[inline]
+            fn expecting(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+                f.write_str("an IPv4 CIDR string")
+            }
+
+            #[inline]
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: DeError, {
+                Ipv4Cidr::from_str(v).map_err(DeError::custom)
+            }
+        }
+
+        deserializer.deserialize_str(Ipv4Visitor)
     }
 }

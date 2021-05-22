@@ -32,3 +32,6 @@ jobs:
       - run: cargo build --release
       - run: cargo test --release
       - run: cargo doc --release
+      - run: cargo build --features serde --release
+      - run: cargo test --features serde --release
+      - run: cargo doc --features serde --release
