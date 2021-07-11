@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::fmt::{self, Debug, Display, Formatter};
-use std::net::IpAddr;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
 
 use crate::num_bigint::BigUint;
@@ -64,6 +64,18 @@ impl IpCidr {
 }
 
 impl IpCidr {
+    /// Explicitly obtain the very beginning of the CIDR
+    /// 10.2.0.1/8 -> 10.0.0.0
+    #[inline]
+    pub fn first_ip_in_cidr(&self) -> IpAddr {
+        match self {
+            IpCidr::V4(cidr) => IpAddr::V4(Ipv4Addr::from(cidr.first())),
+            IpCidr::V6(cidr) => IpAddr::V6(Ipv6Addr::from(cidr.first())),
+        }
+    }
+
+    /// Select the first IP from the CIDR
+    /// 10.2.0.1/8  -> 10.2.0.1
     #[inline]
     pub fn first_as_ip_addr(&self) -> IpAddr {
         match self {
@@ -72,6 +84,8 @@ impl IpCidr {
         }
     }
 
+    /// Select the last IP from the CIDR
+    /// 10.2.0.1/8 -> 10.255.255.255
     #[inline]
     pub fn last_as_ip_addr(&self) -> IpAddr {
         match self {

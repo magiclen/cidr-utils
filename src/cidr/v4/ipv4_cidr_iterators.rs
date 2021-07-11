@@ -19,14 +19,12 @@ impl Ipv4CidrU8ArrayIterator {
         let p = self.from + self.next as u32;
 
         self.next += 1;
-
         p.to_be_bytes()
     }
 
     #[inline]
     unsafe fn next_back_unchecked(&mut self) -> [u8; 4] {
         self.back -= 1;
-
         let p = self.from + self.back as u32;
 
         p.to_be_bytes()
@@ -40,7 +38,6 @@ impl Ipv4CidrU8ArrayIterator {
             Some(unsafe { self.next_unchecked() })
         } else {
             self.next = self.size;
-
             None
         }
     }
@@ -56,7 +53,6 @@ impl Ipv4CidrU8ArrayIterator {
         }
 
         self.next = self.size;
-
         None
     }
 }
@@ -137,8 +133,8 @@ impl DoubleEndedIterator for Ipv4CidrU8ArrayIterator {
 impl Ipv4Cidr {
     #[inline]
     pub fn iter_as_u8_array(&self) -> Ipv4CidrU8ArrayIterator {
-        let from = self.first();
-        let size = self.size();
+        let from = self.get_prefix(); 
+        let size = self.size() - (self.get_prefix() - self.first()) as u64;
 
         Ipv4CidrU8ArrayIterator {
             from,

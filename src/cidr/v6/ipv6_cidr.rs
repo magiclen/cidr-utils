@@ -37,6 +37,13 @@ pub struct Ipv6Cidr {
 }
 
 impl Ipv6Cidr {
+    /// Resets the internal counter to zero,
+    /// reset(`10.3.2.1/16`) -> `10.3.0.0/16` 
+    #[inline]
+    pub fn reset(&mut self) {
+        self.prefix = self.prefix & self.mask;
+    }
+
     #[inline]
     /// Get an integer which represents the prefix an IPv6 byte array of this CIDR in big-endian (BE) order.
     pub fn get_prefix(&self) -> u128 {
@@ -100,8 +107,7 @@ impl Ipv6Cidr {
         }
 
         let mask = get_mask(bits);
-
-        let prefix = prefix.get_u128() & mask;
+        let prefix = prefix.get_u128(); // & mask;
 
         Ok(Ipv6Cidr {
             prefix,
@@ -118,7 +124,7 @@ impl Ipv6Cidr {
 
         match mask_to_bits(mask) {
             Some(_) => {
-                let prefix = prefix.get_u128() & mask;
+                let prefix = prefix.get_u128(); // & mask;
 
                 Ok(Ipv6Cidr {
                     prefix,
@@ -162,7 +168,7 @@ impl Ipv6Cidr {
     #[inline]
     /// Get an integer which represents the first IPv6 byte array of this CIDR in big-endian (BE) order.
     pub fn first(&self) -> u128 {
-        self.get_prefix()
+        self.get_prefix() & self.mask
     }
 
     #[inline]

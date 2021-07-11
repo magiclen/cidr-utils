@@ -31,11 +31,20 @@ static RE_IPV4_CIDR: Lazy<Regex> = Lazy::new(|| {
 pub struct Ipv4Cidr {
     prefix: u32,
     mask: u32,
+    
+    
 }
 
 impl Ipv4Cidr {
+    /// Resets the internal counter to zero,
+    /// reset(`10.3.2.1/16`) -> `10.3.0.0/16` 
     #[inline]
+    pub fn reset(&mut self) {
+        self.prefix = self.prefix.get_u32() & self.mask;
+    }
+
     /// Get an integer which represents the prefix an IPv4 byte array of this CIDR in big-endian (BE) order.
+    #[inline]
     pub fn get_prefix(&self) -> u32 {
         self.prefix
     }
@@ -87,15 +96,15 @@ impl Ipv4Cidr {
         }
 
         let mask = get_mask(bits);
-
-        let prefix = prefix.get_u32() & mask;
-
+        let start = prefix.get_u32();
+        // let prefix = prefix.get_u32() & mask;
+        
         Ok(Ipv4Cidr {
-            prefix,
+            prefix: start,
             mask,
         })
     }
-
+    
     #[inline]
     pub fn from_prefix_and_mask<P: Ipv4Able, M: Ipv4Able>(
         prefix: P,
@@ -105,7 +114,7 @@ impl Ipv4Cidr {
 
         match mask_to_bits(mask) {
             Some(_) => {
-                let prefix = prefix.get_u32() & mask;
+                let prefix = prefix.get_u32(); //& mask);
 
                 Ok(Ipv4Cidr {
                     prefix,
@@ -127,6 +136,7 @@ impl Ipv4Cidr {
 
                 prefix[0] = c.get(1).unwrap().as_str().parse().unwrap();
 
+                // This is entirely un-readable
                 for (i, p) in prefix[1..].iter_mut().enumerate() {
                     match c.get(i + 2).map(|m| m.as_str().parse().unwrap()) {
                         Some(n) => {
@@ -147,9 +157,11 @@ impl Ipv4Cidr {
                             return Err(Ipv4CidrError::IncorrectIpv4CIDRString);
                         }
                     }
-
+                    
                     Ok(Ipv4Cidr::from_prefix_and_bits(prefix, bits)?)
-                } else if let Some(m) = c.get(6) {
+                }
+
+                else if let Some(m) = c.get(6) {
                     let mut mask = [0u8; 4];
 
                     mask[0] = m.as_str().parse().unwrap();
@@ -164,7 +176,7 @@ impl Ipv4Cidr {
                                     return Err(Ipv4CidrError::IncorrectIpv4CIDRString);
                                 }
                             }
-
+                            
                             Ipv4Cidr::from_prefix_and_mask(prefix, mask)
                         }
                         None => Err(Ipv4CidrError::IncorrectIpv4CIDRString),
@@ -187,7 +199,7 @@ impl Ipv4Cidr {
     #[inline]
     /// Get an integer which represents the first IPv4 byte array of this CIDR in big-endian (BE) order.
     pub fn first(&self) -> u32 {
-        self.get_prefix()
+        self.get_prefix() & self.mask
     }
 
     #[inline]
