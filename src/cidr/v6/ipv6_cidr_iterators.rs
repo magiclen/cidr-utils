@@ -116,8 +116,9 @@ impl DoubleEndedIterator for Ipv6CidrU8ArrayIterator {
 impl Ipv6Cidr {
     #[inline]
     pub fn iter_as_u8_array(&self) -> Ipv6CidrU8ArrayIterator {
-        let from = self.first();
-        let size = self.size();
+        
+        let from = self.get_prefix(); 
+        let size = self.size() - (self.get_prefix() - self.first());
 
         Ipv6CidrU8ArrayIterator {
             from,
@@ -235,8 +236,8 @@ impl DoubleEndedIterator for Ipv6CidrU16ArrayIterator {
 impl Ipv6Cidr {
     #[inline]
     pub fn iter_as_u16_array(&self) -> Ipv6CidrU16ArrayIterator {
-        let from = self.first();
-        let size = self.size();
+        let from = self.get_prefix(); 
+        let size = self.size() - (self.get_prefix() - self.first());
 
         Ipv6CidrU16ArrayIterator {
             from,

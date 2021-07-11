@@ -8,6 +8,17 @@ fn cidr_starts_at_netmask() {
     assert_eq!(x.first_as_ip_addr(), IpAddr::from(Ipv4Addr::new(0, 0, 0, 5)));
 }
 
+
+#[test]
+fn cidr_starts_iter_at_netmask() {
+    let x = IpCidr::from_str("0.0.0.5/24").unwrap();
+    let mut iter = x.iter();
+
+    assert_eq!(iter.next().unwrap(), IpAddr::from(Ipv4Addr::new(0, 0, 0, 5)));
+}
+
+
+
 #[test]
 fn first_in_cidr() {
     let cdir = IpCidr::from_str("0.0.0.5/24").unwrap();

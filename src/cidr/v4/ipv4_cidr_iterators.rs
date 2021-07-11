@@ -133,8 +133,8 @@ impl DoubleEndedIterator for Ipv4CidrU8ArrayIterator {
 impl Ipv4Cidr {
     #[inline]
     pub fn iter_as_u8_array(&self) -> Ipv4CidrU8ArrayIterator {
-        let from = self.first();
-        let size = self.size();
+        let from = self.get_prefix(); 
+        let size = self.size() - (self.get_prefix() - self.first()) as u64;
 
         Ipv4CidrU8ArrayIterator {
             from,

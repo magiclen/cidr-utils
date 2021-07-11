@@ -98,7 +98,7 @@ impl Ipv6Cidr {
 
 impl Ipv6Cidr {
     #[inline]
-    pub fn from_prefix_and_bits<P: Ipv6Able>(
+    pub fn from_prefix_and_bits<P: Ipv6Able+Debug>(
         prefix: P,
         bits: u8,
     ) -> Result<Ipv6Cidr, Ipv6CidrError> {
@@ -107,7 +107,6 @@ impl Ipv6Cidr {
         }
 
         let mask = get_mask(bits);
-
         let prefix = prefix.get_u128(); // & mask;
 
         Ok(Ipv6Cidr {
