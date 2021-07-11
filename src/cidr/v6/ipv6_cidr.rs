@@ -98,7 +98,7 @@ impl Ipv6Cidr {
 
 impl Ipv6Cidr {
     #[inline]
-    pub fn from_prefix_and_bits<P: Ipv6Able+Debug>(
+    pub fn from_prefix_and_bits<P: Ipv6Able>(
         prefix: P,
         bits: u8,
     ) -> Result<Ipv6Cidr, Ipv6CidrError> {
