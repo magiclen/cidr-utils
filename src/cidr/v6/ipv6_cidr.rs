@@ -169,7 +169,7 @@ impl Ipv6Cidr {
     #[inline]
     /// Get an integer which represents the first IPv6 byte array of this CIDR in big-endian (BE) order.
     pub fn first(&self) -> u128 {
-        self.get_prefix()
+        self.get_prefix() & self.mask
     }
 
     #[inline]

@@ -16,17 +16,19 @@ pub struct Ipv4CidrU8ArrayIterator {
 impl Ipv4CidrU8ArrayIterator {
     #[inline]
     unsafe fn next_unchecked(&mut self) -> [u8; 4] {
+        println!("next");
+
         let p = self.from + self.next as u32;
 
         self.next += 1;
-
         p.to_be_bytes()
     }
 
     #[inline]
     unsafe fn next_back_unchecked(&mut self) -> [u8; 4] {
+        println!("back");
+        
         self.back -= 1;
-
         let p = self.from + self.back as u32;
 
         p.to_be_bytes()
@@ -34,19 +36,20 @@ impl Ipv4CidrU8ArrayIterator {
 
     #[inline]
     pub fn nth_u64(&mut self, n: u64) -> Option<[u8; 4]> {
+        println!("nth_u64");
         self.next += n;
 
         if self.next < self.back {
             Some(unsafe { self.next_unchecked() })
         } else {
             self.next = self.size;
-
             None
         }
     }
 
     #[inline]
     pub fn nth_back_u64(&mut self, n: u64) -> Option<[u8; 4]> {
+        println!("nth_back_u64");
         if self.back > n {
             self.back -= n;
 
@@ -56,7 +59,6 @@ impl Ipv4CidrU8ArrayIterator {
         }
 
         self.next = self.size;
-
         None
     }
 }
