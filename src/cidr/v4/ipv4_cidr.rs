@@ -149,8 +149,6 @@ impl Ipv4Cidr {
                     }
                 }
 
-                dbg!(&prefix);
-
                 if let Some(m) = c.get(5) {
                     let bits = m.as_str().parse().unwrap();
 
