@@ -253,7 +253,7 @@ impl Display for Ipv6Cidr {
 impl PartialOrd for Ipv6Cidr {
     #[inline]
     fn partial_cmp(&self, other: &Ipv6Cidr) -> Option<Ordering> {
-        Some(self.cmp(&other))
+        Some(self.cmp(other))
     }
 }
 

@@ -260,7 +260,7 @@ impl Display for Ipv4Cidr {
 impl PartialOrd for Ipv4Cidr {
     #[inline]
     fn partial_cmp(&self, other: &Ipv4Cidr) -> Option<Ordering> {
-        Some(self.cmp(&other))
+        Some(self.cmp(other))
     }
 }
 
