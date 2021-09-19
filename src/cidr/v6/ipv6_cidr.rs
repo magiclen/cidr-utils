@@ -263,7 +263,7 @@ impl Ord for Ipv6Cidr {
         let a = self.first_as_u16_array();
         let b = other.first_as_u16_array();
 
-        for i in 0..16 {
+        for i in 0..8 {
             let cmp_result = a[i].cmp(&b[i]);
 
             if cmp_result != Ordering::Equal {
