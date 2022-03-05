@@ -1,9 +1,3 @@
-extern crate once_cell;
-extern crate regex;
-
-#[cfg(feature = "serde")]
-extern crate serde;
-
 use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::fmt::{self, Debug, Display, Formatter};

@@ -1,8 +1,8 @@
 [package]
 name = "cidr-utils"
-version = "0.5.5"
+version = "0.5.6"
 authors = ["Magic Len <len@magiclen.org>"]
-edition = "2018"
+edition = "2021"
 repository = "https://github.com/magiclen/cidr-utils"
 homepage = "https://magiclen.org/cidr-utils"
 keywords = ["cidr", "ip", "ipv4", "ipv6"]

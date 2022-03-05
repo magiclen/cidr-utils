@@ -1,5 +1,3 @@
-extern crate num_traits;
-
 use std::net::Ipv6Addr;
 
 use crate::num_bigint::BigUint;

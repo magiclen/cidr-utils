@@ -1,5 +1,3 @@
-extern crate cidr_utils;
-
 use std::cmp::Ordering;
 use std::net::Ipv6Addr;
 use std::str::FromStr;
@@ -118,10 +116,10 @@ fn contains() {
     let cidr_1 = Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFFF:0/112").unwrap();
     let cidr_2 = Ipv6Cidr::from_str("0:0:0:0:0:FFFF:FFDC:0/113").unwrap();
 
-    assert_eq!(false, cidr_1.contains([0, 0, 0, 0, 0, 65535, 65534, 65535]));
-    assert_eq!(true, cidr_1.contains([0, 0, 0, 0, 0, 65535, 65535, 1]));
-    assert_eq!(false, cidr_2.contains([0, 0, 0, 0, 0, 65535, 65500, 32768]));
-    assert_eq!(true, cidr_2.contains([0, 0, 0, 0, 0, 65535, 65500, 32767]));
+    assert!(!cidr_1.contains([0, 0, 0, 0, 0, 65535, 65534, 65535]));
+    assert!(cidr_1.contains([0, 0, 0, 0, 0, 65535, 65535, 1]));
+    assert!(!cidr_2.contains([0, 0, 0, 0, 0, 65535, 65500, 32768]));
+    assert!(cidr_2.contains([0, 0, 0, 0, 0, 65535, 65500, 32767]));
 }
 
 #[test]

@@ -1,5 +1,3 @@
-extern crate cidr_utils;
-
 use std::str::FromStr;
 
 use cidr_utils::num_bigint::BigUint;

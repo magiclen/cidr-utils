@@ -1,5 +1,3 @@
-extern crate cidr_utils;
-
 use cidr_utils::{cidr::IpCidr, utils::IpCidrSeparator};
 
 #[test]

@@ -1,5 +1,3 @@
-extern crate num_traits;
-
 use std::fmt::{self, Display, Formatter, Write};
 use std::ops::Deref;
 

@@ -8,8 +8,6 @@ This crate provides data structures and functions to deal with IPv4 CIDRs and IP
 The format of CIDRs.
 
 ```rust
-extern crate cidr_utils;
-
 use cidr_utils::cidr::IpCidr;
 
 assert_eq!(true, IpCidr::is_ip_cidr("192.168.1.0/24"));
@@ -44,8 +42,6 @@ assert_eq!(true, IpCidr::is_ip_cidr("2001:4f8:3:ba::"));                  // 200
 Determine whether an IP is in a CIDR.
 
 ```rust
-extern crate cidr_utils;
-
 use std::net::IpAddr;
 use std::str::FromStr;
 
@@ -58,8 +54,6 @@ assert_eq!(false, cidr.contains(IpAddr::from_str("192.168.50.103").unwrap()));
 ```
 
 ```rust
-extern crate cidr_utils;
-
 use std::net::Ipv4Addr;
 
 use cidr_utils::cidr::Ipv4Cidr;
@@ -76,8 +70,6 @@ assert_eq!(256, cidr.size());
 Combine subnetworks to supernetworks.
 
 ```rust
-extern crate cidr_utils;
-
 use cidr_utils::cidr::Ipv4Cidr;
 use cidr_utils::utils::Ipv4CidrCombiner;
 
@@ -113,8 +105,6 @@ assert_eq!(4, combiner.size());
 Separate a network into subnetworks.
 
 ```rust
-extern crate cidr_utils;
-
 use cidr_utils::cidr::Ipv4Cidr;
 use cidr_utils::utils::Ipv4CidrSeparator;
 

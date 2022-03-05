@@ -1,5 +1,3 @@
-extern crate cidr_utils;
-
 use cidr_utils::{
     cidr::{IpCidr, Ipv4Cidr, Ipv6Cidr},
     utils::IpCidrCombiner,

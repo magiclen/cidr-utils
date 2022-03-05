@@ -1,5 +1,3 @@
-extern crate num_traits;
-
 use std::cmp::Ordering;
 
 use crate::cidr::Ipv6Cidr;

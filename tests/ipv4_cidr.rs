@@ -1,5 +1,3 @@
-extern crate cidr_utils;
-
 use cidr_utils::cidr::Ipv4Cidr;
 use std::cmp::Ordering;
 use std::net::Ipv4Addr;
@@ -119,14 +117,14 @@ fn contains() {
     let cidr_1 = Ipv4Cidr::from_str("192.168.51.1/16").unwrap();
     let cidr_2 = Ipv4Cidr::from_str("192.168.43.1/17").unwrap();
 
-    assert_eq!(false, cidr_1.contains([127, 0, 0, 1]));
-    assert_eq!(false, cidr_1.contains([192, 167, 0, 0]));
-    assert_eq!(true, cidr_1.contains([192, 168, 0, 0]));
-    assert_eq!(true, cidr_1.contains([192, 168, 51, 0]));
-    assert_eq!(true, cidr_1.contains([192, 168, 255, 255]));
-    assert_eq!(false, cidr_1.contains([192, 169, 0, 0]));
-    assert_eq!(true, cidr_2.contains([192, 168, 127, 255]));
-    assert_eq!(false, cidr_2.contains([192, 168, 128, 0]));
+    assert!(!cidr_1.contains([127, 0, 0, 1]));
+    assert!(!cidr_1.contains([192, 167, 0, 0]));
+    assert!(cidr_1.contains([192, 168, 0, 0]));
+    assert!(cidr_1.contains([192, 168, 51, 0]));
+    assert!(cidr_1.contains([192, 168, 255, 255]));
+    assert!(!cidr_1.contains([192, 169, 0, 0]));
+    assert!(cidr_2.contains([192, 168, 127, 255]));
+    assert!(!cidr_2.contains([192, 168, 128, 0]));
 }
 
 #[test]
