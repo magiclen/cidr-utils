@@ -22,28 +22,20 @@ impl IpCidr {
 
         match Ipv4Cidr::from_str(s) {
             Ok(cidr) => Ok(IpCidr::V4(cidr)),
-            Err(err) => {
-                match err {
-                    Ipv4CidrError::IncorrectBitsRange => Err(IpCidrError::IncorrectBitsRange),
-                    Ipv4CidrError::IncorrectMask => Err(IpCidrError::IncorrectMask),
-                    Ipv4CidrError::IncorrectIpv4CIDRString => {
-                        match Ipv6Cidr::from_str(s) {
-                            Ok(cidr) => Ok(IpCidr::V6(cidr)),
-                            Err(err) => {
-                                match err {
-                                    Ipv6CidrError::IncorrectBitsRange => {
-                                        Err(IpCidrError::IncorrectBitsRange)
-                                    }
-                                    Ipv6CidrError::IncorrectMask => Err(IpCidrError::IncorrectMask),
-                                    Ipv6CidrError::IncorrectIpv6CIDRString => {
-                                        Err(IpCidrError::IncorrectIpCIDRString)
-                                    }
-                                }
-                            }
+            Err(err) => match err {
+                Ipv4CidrError::IncorrectBitsRange => Err(IpCidrError::IncorrectBitsRange),
+                Ipv4CidrError::IncorrectMask => Err(IpCidrError::IncorrectMask),
+                Ipv4CidrError::IncorrectIpv4CIDRString => match Ipv6Cidr::from_str(s) {
+                    Ok(cidr) => Ok(IpCidr::V6(cidr)),
+                    Err(err) => match err {
+                        Ipv6CidrError::IncorrectBitsRange => Err(IpCidrError::IncorrectBitsRange),
+                        Ipv6CidrError::IncorrectMask => Err(IpCidrError::IncorrectMask),
+                        Ipv6CidrError::IncorrectIpv6CIDRString => {
+                            Err(IpCidrError::IncorrectIpCIDRString)
                         }
-                    }
-                }
-            }
+                    },
+                },
+            },
         }
     }
 
@@ -59,7 +51,7 @@ impl IpCidr {
 
     #[inline]
     pub fn is_ipv6_cidr<S: AsRef<str>>(s: S) -> bool {
-        Ipv4Cidr::from_str(s).is_ok()
+        Ipv6Cidr::from_str(s).is_ok()
     }
 }
 
@@ -93,18 +85,14 @@ impl IpCidr {
     #[inline]
     pub fn contains(&self, ip: IpAddr) -> bool {
         match self {
-            IpCidr::V4(cidr) => {
-                match ip {
-                    IpAddr::V4(ip) => cidr.contains(ip),
-                    IpAddr::V6(_) => false,
-                }
-            }
-            IpCidr::V6(cidr) => {
-                match ip {
-                    IpAddr::V4(_) => false,
-                    IpAddr::V6(ip) => cidr.contains(ip),
-                }
-            }
+            IpCidr::V4(cidr) => match ip {
+                IpAddr::V4(ip) => cidr.contains(ip),
+                IpAddr::V6(_) => false,
+            },
+            IpCidr::V6(cidr) => match ip {
+                IpAddr::V4(_) => false,
+                IpAddr::V6(ip) => cidr.contains(ip),
+            },
         }
     }
 }
