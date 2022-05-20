@@ -59,7 +59,7 @@ impl IpCidr {
 
     #[inline]
     pub fn is_ipv6_cidr<S: AsRef<str>>(s: S) -> bool {
-        Ipv4Cidr::from_str(s).is_ok()
+        Ipv6Cidr::from_str(s).is_ok()
     }
 }
 
