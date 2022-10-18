@@ -4,8 +4,6 @@ use std::ops::Deref;
 use crate::cidr::{Ipv6Able, Ipv6Cidr};
 use crate::num_bigint::BigUint;
 
-use num_traits::Zero;
-
 /// To combine multiple IPv6 CIDRs to supernetworks.
 #[derive(Debug)]
 pub struct Ipv6CidrCombiner {
@@ -55,7 +53,7 @@ impl Ipv6CidrCombiner {
                 } else {
                     let previous_cidr = self.cidr_array.get(index - 1).unwrap();
 
-                    !previous_cidr.contains(&cidr.first())
+                    !previous_cidr.contains(cidr.first())
                 };
 
                 if pushable {
@@ -141,26 +139,12 @@ impl Ipv6CidrCombiner {
     #[inline]
     /// Check an IPv6 whether it is in these CIDRs.
     pub fn contains<IP: Ipv6Able>(&self, ipv6: IP) -> bool {
-        for cidr in self.cidr_array.iter() {
-            if cidr.contains(&ipv6) {
-                return true;
-            }
-        }
-
-        false
+        self.cidr_array.iter().any(|cidr| cidr.contains(&ipv6))
     }
 
     #[inline]
     pub fn size(&self) -> BigUint {
-        let mut sum = BigUint::zero();
-
-        for cidr in self.cidr_array.iter() {
-            let size = cidr.size();
-
-            sum += size;
-        }
-
-        sum
+        self.cidr_array.iter().map(|cidr| cidr.size()).sum()
     }
 }
 

@@ -52,7 +52,7 @@ impl Ipv4CidrCombiner {
                 } else {
                     let previous_cidr = self.cidr_array.get(index - 1).unwrap();
 
-                    !previous_cidr.contains(&cidr.first())
+                    !previous_cidr.contains(cidr.first())
                 };
 
                 if pushable {
@@ -138,24 +138,12 @@ impl Ipv4CidrCombiner {
     #[inline]
     /// Check an IPv4 whether it is in these CIDRs.
     pub fn contains<IP: Ipv4Able>(&self, ipv4: IP) -> bool {
-        for cidr in self.cidr_array.iter() {
-            if cidr.contains(&ipv4) {
-                return true;
-            }
-        }
-
-        false
+        self.cidr_array.iter().any(|cidr| cidr.contains(&ipv4))
     }
 
     #[inline]
     pub fn size(&self) -> u64 {
-        let mut sum = 0;
-
-        for cidr in self.cidr_array.iter() {
-            sum += cidr.size();
-        }
-
-        sum
+        self.cidr_array.iter().map(|cidr| cidr.size()).sum()
     }
 }
 

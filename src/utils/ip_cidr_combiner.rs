@@ -83,23 +83,9 @@ impl IpCidrCombiner {
     /// Check an IP whether it is in these CIDRs.
     pub fn contains(&self, ip: IpAddr) -> bool {
         match ip {
-            IpAddr::V4(ipv4) => {
-                for cidr in self.ipv4.iter() {
-                    if cidr.contains(&ipv4) {
-                        return true;
-                    }
-                }
-            }
-            IpAddr::V6(ipv6) => {
-                for cidr in self.ipv6.iter() {
-                    if cidr.contains(&ipv6) {
-                        return true;
-                    }
-                }
-            }
+            IpAddr::V4(ipv4) => self.ipv4.iter().any(|cidr| cidr.contains(ipv4)),
+            IpAddr::V6(ipv6) => self.ipv6.iter().any(|cidr| cidr.contains(ipv6)),
         }
-
-        false
     }
 
     #[inline]
