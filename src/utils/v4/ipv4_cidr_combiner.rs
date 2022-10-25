@@ -52,7 +52,7 @@ impl Ipv4CidrCombiner {
                 } else {
                     let previous_cidr = self.cidr_array.get(index - 1).unwrap();
 
-                    !previous_cidr.contains(&cidr.first())
+                    !previous_cidr.contains(cidr.first())
                 };
 
                 if pushable {

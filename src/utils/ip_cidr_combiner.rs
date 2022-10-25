@@ -85,14 +85,14 @@ impl IpCidrCombiner {
         match ip {
             IpAddr::V4(ipv4) => {
                 for cidr in self.ipv4.iter() {
-                    if cidr.contains(&ipv4) {
+                    if cidr.contains(ipv4) {
                         return true;
                     }
                 }
             }
             IpAddr::V6(ipv6) => {
                 for cidr in self.ipv6.iter() {
-                    if cidr.contains(&ipv6) {
+                    if cidr.contains(ipv6) {
                         return true;
                     }
                 }
