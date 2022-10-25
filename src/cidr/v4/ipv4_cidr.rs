@@ -230,24 +230,21 @@ impl Ipv4Cidr {
 impl Debug for Ipv4Cidr {
     #[inline]
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        let prefix = self.get_prefix_as_u8_array();
-        let mask = self.get_mask_as_u8_array();
+        let prefix = self.get_prefix_as_ipv4_addr();
+        let mask = self.get_mask_as_ipv4_addr();
         let bits = self.get_bits();
 
-        debug_helper::impl_debug_for_struct!(Ipv4Cidr, f, self, (.prefix, "{}.{}.{}.{}", prefix[0], prefix[1], prefix[2], prefix[3]), (.mask, "{}.{}.{}.{}", mask[0], mask[1], mask[2], mask[3]), let .bits = bits);
+        debug_helper::impl_debug_for_struct!(Ipv6Cidr, f, self, let .prefix = prefix, let .mask = mask, let .bits = bits);
     }
 }
 
 impl Display for Ipv4Cidr {
     #[inline]
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        let prefix = self.get_prefix_as_u8_array();
+        let prefix = self.get_prefix_as_ipv4_addr();
         let bits = self.get_bits();
 
-        f.write_fmt(format_args!(
-            "{}.{}.{}.{}/{}",
-            prefix[0], prefix[1], prefix[2], prefix[3], bits
-        ))
+        f.write_fmt(format_args!("{prefix}/{bits}"))
     }
 }
 
