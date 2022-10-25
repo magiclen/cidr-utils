@@ -124,7 +124,7 @@ impl Display for IpCidrCombiner {
             let length_dec = ipv4_length - 1;
 
             for cidr in self.ipv4.iter().take(length_dec) {
-                f.write_fmt(format_args!("{}, ", cidr))?
+                f.write_fmt(format_args!("{cidr}, "))?
             }
 
             f.write_fmt(format_args!("{}", self.ipv4[length_dec]))?;
@@ -140,7 +140,7 @@ impl Display for IpCidrCombiner {
             }
 
             for cidr in self.ipv6.iter().take(length_dec) {
-                f.write_fmt(format_args!("{}, ", cidr))?
+                f.write_fmt(format_args!("{cidr}, "))?
             }
 
             f.write_fmt(format_args!("{}", self.ipv6[length_dec]))?;

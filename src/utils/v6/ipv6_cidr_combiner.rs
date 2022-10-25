@@ -175,7 +175,7 @@ impl Display for Ipv6CidrCombiner {
             let length_dec = length - 1;
 
             for cidr in self.cidr_array.iter().take(length_dec) {
-                f.write_fmt(format_args!("{}, ", cidr))?
+                f.write_fmt(format_args!("{cidr}, "))?
             }
 
             f.write_fmt(format_args!("{}", self.cidr_array[length_dec]))?;
