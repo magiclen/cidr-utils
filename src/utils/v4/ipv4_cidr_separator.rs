@@ -33,7 +33,7 @@ impl Ipv4CidrSeparator {
 
             let bits = cidr.get_bits() + (n as f64).log2() as u8;
 
-            let usize_max_u64 = usize::max_value() as u64;
+            let usize_max_u64 = usize::MAX as u64;
 
             if d <= usize_max_u64 {
                 for ip in iter.step_by(d as usize) {
@@ -113,7 +113,7 @@ impl Ipv4CidrSeparator {
 
         let mut iter = cidr.iter();
 
-        let usize_max_u64 = usize::max_value() as u64;
+        let usize_max_u64 = usize::MAX as u64;
 
         if d <= usize_max_u64 {
             for ip in iter.step_by(d as usize) {

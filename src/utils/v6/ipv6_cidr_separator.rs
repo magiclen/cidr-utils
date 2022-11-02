@@ -36,7 +36,7 @@ impl Ipv6CidrSeparator {
 
             let bits = cidr.get_bits() + log2_n as u8;
 
-            let usize_max_big_int = BigUint::from(usize::max_value());
+            let usize_max_big_int = BigUint::from(usize::MAX);
 
             let d = size / n_big_int;
 
@@ -122,7 +122,7 @@ impl Ipv6CidrSeparator {
 
         let mut iter = cidr.iter();
 
-        let usize_max_big_int = BigUint::from(usize::max_value());
+        let usize_max_big_int = BigUint::from(usize::MAX);
 
         if d <= usize_max_big_int {
             for ip in iter.step_by(d.to_usize().unwrap()) {
