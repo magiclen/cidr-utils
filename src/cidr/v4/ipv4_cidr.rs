@@ -234,7 +234,7 @@ impl Debug for Ipv4Cidr {
         let mask = self.get_mask_as_ipv4_addr();
         let bits = self.get_bits();
 
-        debug_helper::impl_debug_for_struct!(Ipv6Cidr, f, self, let .prefix = prefix, let .mask = mask, let .bits = bits);
+        debug_helper::impl_debug_for_struct!(Ipv4Cidr, f, self, let .prefix = prefix, let .mask = mask, let .bits = bits);
     }
 }
 
