@@ -206,7 +206,7 @@ impl Ipv6Cidr {
 
 impl Debug for Ipv6Cidr {
     #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
         let prefix = self.get_prefix_as_ipv6_addr();
         let mask = self.get_mask_as_ipv6_addr();
         let bits = self.get_bits();
@@ -217,7 +217,7 @@ impl Debug for Ipv6Cidr {
 
 impl Display for Ipv6Cidr {
     #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
         let prefix = self.get_prefix_as_ipv6_addr();
         let bits = self.get_bits();
 
@@ -290,7 +290,7 @@ impl<'de> Deserialize<'de> for Ipv6Cidr {
             type Value = Ipv6Cidr;
 
             #[inline]
-            fn expecting(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+            fn expecting(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
                 f.write_str("an IPv6 CIDR string")
             }
 

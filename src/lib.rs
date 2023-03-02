@@ -163,7 +163,11 @@ features = ["serde"]
 ```
 */
 
-pub extern crate num_bigint;
+#![deny(rust_2018_idioms, nonstandard_style)]
+#![warn(future_incompatible)]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
+pub use num_bigint;
 
 /// This module provides data structures for IPv4 CIDRs and IPv6 CIDRs.
 pub mod cidr;

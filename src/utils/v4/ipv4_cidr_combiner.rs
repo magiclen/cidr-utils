@@ -163,7 +163,7 @@ impl Ipv4CidrCombiner {
 
 impl Display for Ipv4CidrCombiner {
     #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
         f.write_char('[')?;
 
         let length = self.cidr_array.len();

@@ -105,7 +105,7 @@ impl IpCidr {
 
 impl Display for IpCidr {
     #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             IpCidr::V4(cidr) => Display::fmt(&cidr, f),
             IpCidr::V6(cidr) => Display::fmt(&cidr, f),

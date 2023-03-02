@@ -118,7 +118,7 @@ impl IpCidrCombiner {
 
 impl Display for IpCidrCombiner {
     #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
         f.write_char('[')?;
 
         let ipv4_length = self.ipv4.len();

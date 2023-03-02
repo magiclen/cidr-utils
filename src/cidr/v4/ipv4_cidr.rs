@@ -228,7 +228,7 @@ impl Ipv4Cidr {
 
 impl Debug for Ipv4Cidr {
     #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
         let prefix = self.get_prefix_as_ipv4_addr();
         let mask = self.get_mask_as_ipv4_addr();
         let bits = self.get_bits();
@@ -239,7 +239,7 @@ impl Debug for Ipv4Cidr {
 
 impl Display for Ipv4Cidr {
     #[inline]
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
         let prefix = self.get_prefix_as_ipv4_addr();
         let bits = self.get_bits();
 
@@ -312,7 +312,7 @@ impl<'de> Deserialize<'de> for Ipv4Cidr {
             type Value = Ipv4Cidr;
 
             #[inline]
-            fn expecting(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+            fn expecting(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
                 f.write_str("an IPv4 CIDR string")
             }
 
