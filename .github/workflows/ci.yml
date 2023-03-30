@@ -4,30 +4,24 @@ on: [push, pull_request]
 
 env:
   CARGO_TERM_COLOR: always
-  
+
 jobs:
   rustfmt:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
           toolchain: nightly
-          override: true
           components: rustfmt
-      - run: cargo fmt -- --check
-      
+      - run: cargo fmt --all -- --check
+
   clippy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          components: clippy
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with: { components: clippy }
       - run: cargo clippy --all-targets --all-features -- -D warnings
 
   tests:
@@ -45,14 +39,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
           toolchain: ${{ matrix.toolchain }}
-          override: true
-      - run: cargo build
       - run: cargo test
       - run: cargo doc
-      - run: cargo build --features serde
       - run: cargo test --features serde
       - run: cargo doc --features serde
