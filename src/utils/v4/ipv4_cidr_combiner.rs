@@ -1,5 +1,7 @@
-use std::fmt::{self, Display, Formatter, Write};
-use std::ops::Deref;
+use std::{
+    fmt::{self, Display, Formatter, Write},
+    ops::Deref,
+};
 
 use crate::cidr::{Ipv4Able, Ipv4Cidr};
 
@@ -14,7 +16,7 @@ impl Ipv4CidrCombiner {
     /// Create a new `Ipv4CidrCombiner` instance.
     pub fn new() -> Ipv4CidrCombiner {
         Ipv4CidrCombiner {
-            cidr_array: Vec::new(),
+            cidr_array: Vec::new()
         }
     }
 
@@ -22,7 +24,7 @@ impl Ipv4CidrCombiner {
     /// Create a new `Ipv4CidrCombiner` instance with a specific capacity.
     pub fn with_capacity(capacity: usize) -> Ipv4CidrCombiner {
         Ipv4CidrCombiner {
-            cidr_array: Vec::with_capacity(capacity),
+            cidr_array: Vec::with_capacity(capacity)
         }
     }
 
@@ -30,7 +32,7 @@ impl Ipv4CidrCombiner {
     #[inline]
     pub unsafe fn from_ipv4_cidr_vec_unchecked(cidr_vec: Vec<Ipv4Cidr>) -> Ipv4CidrCombiner {
         Ipv4CidrCombiner {
-            cidr_array: cidr_vec,
+            cidr_array: cidr_vec
         }
     }
 

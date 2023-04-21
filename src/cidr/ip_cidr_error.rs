@@ -1,5 +1,7 @@
-use std::error::Error;
-use std::fmt::{self, Display, Formatter};
+use std::{
+    error::Error,
+    fmt::{self, Display, Formatter},
+};
 
 use super::{Ipv4CidrError, Ipv6CidrError};
 
@@ -39,7 +41,7 @@ impl Display for IpCidrError {
         match self {
             IpCidrError::IncorrectBitsRange => {
                 f.write_str("The subnet size (bits) is out of range.")
-            }
+            },
             IpCidrError::IncorrectMask => f.write_str("The mask is incorrect."),
             IpCidrError::IncorrectIpCIDRString => f.write_str("The CIDR string is incorrect."),
         }

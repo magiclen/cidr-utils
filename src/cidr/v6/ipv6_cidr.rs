@@ -1,22 +1,20 @@
-use std::cmp::Ordering;
-use std::convert::TryFrom;
-use std::fmt::{self, Debug, Display, Formatter};
-use std::net::Ipv6Addr;
-use std::str::FromStr;
-
-use crate::num_bigint::BigUint;
+use std::{
+    cmp::Ordering,
+    convert::TryFrom,
+    fmt::{self, Debug, Display, Formatter},
+    net::Ipv6Addr,
+    str::FromStr,
+};
 
 use once_cell::sync::Lazy;
 use regex::Regex;
-
+#[cfg(feature = "serde")]
+use serde::de::{Deserialize, Deserializer, Error as DeError, Visitor};
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
 
-#[cfg(feature = "serde")]
-use serde::de::{Deserialize, Deserializer, Error as DeError, Visitor};
-
-use super::functions::*;
-use super::{Ipv6Able, Ipv6CidrError};
+use super::{functions::*, Ipv6Able, Ipv6CidrError};
+use crate::num_bigint::BigUint;
 
 static RE_IPV6_CIDR: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^([^/]+)(?:/((?:12[0-8])|(?:1[0-1][0-9])|(?:[1-9][0-9])|[0-9]))?$").unwrap()
@@ -26,7 +24,7 @@ static RE_IPV6_CIDR: Lazy<Regex> = Lazy::new(|| {
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct Ipv6Cidr {
     prefix: u128,
-    mask: u128,
+    mask:   u128,
 }
 
 impl Ipv6Cidr {
@@ -117,7 +115,7 @@ impl Ipv6Cidr {
                     prefix,
                     mask,
                 })
-            }
+            },
             None => Err(Ipv6CidrError::IncorrectMask),
         }
     }
@@ -127,20 +125,15 @@ impl Ipv6Cidr {
         let s = s.as_ref();
 
         match RE_IPV6_CIDR.captures(s) {
-            Some(c) => {
-                match Ipv6Addr::from_str(c.get(1).unwrap().as_str()) {
-                    Ok(prefix) => {
-                        let bits: u8 = if let Some(m) = c.get(2) {
-                            m.as_str().parse().unwrap()
-                        } else {
-                            128
-                        };
+            Some(c) => match Ipv6Addr::from_str(c.get(1).unwrap().as_str()) {
+                Ok(prefix) => {
+                    let bits: u8 =
+                        if let Some(m) = c.get(2) { m.as_str().parse().unwrap() } else { 128 };
 
-                        Ipv6Cidr::from_prefix_and_bits(prefix, bits)
-                    }
-                    Err(_) => Err(Ipv6CidrError::IncorrectIpv6CIDRString),
-                }
-            }
+                    Ipv6Cidr::from_prefix_and_bits(prefix, bits)
+                },
+                Err(_) => Err(Ipv6CidrError::IncorrectIpv6CIDRString),
+            },
             None => Err(Ipv6CidrError::IncorrectIpv6CIDRString),
         }
     }

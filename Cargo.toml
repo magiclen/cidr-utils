@@ -3,6 +3,7 @@ name = "cidr-utils"
 version = "0.5.10"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2021"
+rust-version = "1.58"
 repository = "https://github.com/magiclen/cidr-utils"
 homepage = "https://magiclen.org/cidr-utils"
 keywords = ["cidr", "ip", "ipv4", "ipv6"]
@@ -10,7 +11,6 @@ categories = ["parser-implementations", "data-structures", "network-programming"
 description = "This crate provides data structures and functions to deal with IPv4 CIDRs and IPv6 CIDRs."
 license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
-rust-version = "1.58"
 
 [dependencies]
 regex = "1"

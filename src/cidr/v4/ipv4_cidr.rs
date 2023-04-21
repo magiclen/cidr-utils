@@ -1,20 +1,19 @@
-use std::cmp::Ordering;
-use std::convert::TryFrom;
-use std::fmt::{self, Debug, Display, Formatter};
-use std::net::Ipv4Addr;
-use std::str::FromStr;
+use std::{
+    cmp::Ordering,
+    convert::TryFrom,
+    fmt::{self, Debug, Display, Formatter},
+    net::Ipv4Addr,
+    str::FromStr,
+};
 
 use once_cell::sync::Lazy;
 use regex::Regex;
-
+#[cfg(feature = "serde")]
+use serde::de::{Deserialize, Deserializer, Error as DeError, Visitor};
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
 
-#[cfg(feature = "serde")]
-use serde::de::{Deserialize, Deserializer, Error as DeError, Visitor};
-
-use super::functions::*;
-use super::{Ipv4Able, Ipv4CidrError};
+use super::{functions::*, Ipv4Able, Ipv4CidrError};
 
 static RE_IPV4_CIDR: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^(?:(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])(?:\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])(?:\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])(?:\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9]))?)?)?)(?:/(?:([0-9]|30|31|32|(?:[1-2][0-9]))|(?:(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1(?:[0-9]){1,2}|[1-9]?[0-9]))))?$").unwrap()
@@ -24,7 +23,7 @@ static RE_IPV4_CIDR: Lazy<Regex> = Lazy::new(|| {
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct Ipv4Cidr {
     prefix: u32,
-    mask: u32,
+    mask:   u32,
 }
 
 impl Ipv4Cidr {
@@ -105,7 +104,7 @@ impl Ipv4Cidr {
                     prefix,
                     mask,
                 })
-            }
+            },
             None => Err(Ipv4CidrError::IncorrectMask),
         }
     }
@@ -125,11 +124,11 @@ impl Ipv4Cidr {
                     match c.get(i + 2).map(|m| m.as_str().parse().unwrap()) {
                         Some(n) => {
                             *p = n;
-                        }
+                        },
                         None => {
                             prefer_bits = Some(8 * (i as u8 + 1));
                             break;
-                        }
+                        },
                     }
                 }
 
@@ -160,13 +159,13 @@ impl Ipv4Cidr {
                             }
 
                             Ipv4Cidr::from_prefix_and_mask(prefix, mask)
-                        }
+                        },
                         None => Err(Ipv4CidrError::IncorrectIpv4CIDRString),
                     }
                 } else {
                     Ipv4Cidr::from_prefix_and_bits(prefix, prefer_bits.unwrap_or(32))
                 }
-            }
+            },
             None => Err(Ipv4CidrError::IncorrectIpv4CIDRString),
         }
     }

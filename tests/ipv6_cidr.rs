@@ -1,9 +1,6 @@
-use std::cmp::Ordering;
-use std::net::Ipv6Addr;
-use std::str::FromStr;
+use std::{cmp::Ordering, net::Ipv6Addr, str::FromStr};
 
-use cidr_utils::cidr::Ipv6Cidr;
-use cidr_utils::num_bigint::BigUint;
+use cidr_utils::{cidr::Ipv6Cidr, num_bigint::BigUint};
 
 #[test]
 fn from_prefix_and_mask() {

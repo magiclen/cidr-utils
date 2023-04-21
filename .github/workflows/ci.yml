@@ -14,14 +14,15 @@ jobs:
         with:
           toolchain: nightly
           components: rustfmt
-      - run: cargo fmt --all -- --check
+      - uses: actions-rust-lang/rustfmt@v1
 
   clippy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with: { components: clippy }
+        with:
+          components: clippy
       - run: cargo clippy --all-targets --all-features -- -D warnings
 
   tests:

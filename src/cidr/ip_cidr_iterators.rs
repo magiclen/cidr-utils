@@ -65,16 +65,12 @@ impl IpCidr {
     #[inline]
     pub fn iter_as_ip_addr(&self) -> IpCidrIpAddrIterator {
         match self {
-            IpCidr::V4(cidr) => {
-                IpCidrIpAddrIterator {
-                    iter: IpCidrIpsAddrIterator::V4(cidr.iter_as_ipv4_addr()),
-                }
-            }
-            IpCidr::V6(cidr) => {
-                IpCidrIpAddrIterator {
-                    iter: IpCidrIpsAddrIterator::V6(cidr.iter_as_ipv6_addr()),
-                }
-            }
+            IpCidr::V4(cidr) => IpCidrIpAddrIterator {
+                iter: IpCidrIpsAddrIterator::V4(cidr.iter_as_ipv4_addr()),
+            },
+            IpCidr::V6(cidr) => IpCidrIpAddrIterator {
+                iter: IpCidrIpsAddrIterator::V6(cidr.iter_as_ipv6_addr()),
+            },
         }
     }
 

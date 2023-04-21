@@ -1,10 +1,14 @@
-use std::fmt::{self, Display, Formatter, Write};
-use std::ops::Deref;
-
-use crate::cidr::{Ipv6Able, Ipv6Cidr};
-use crate::num_bigint::BigUint;
+use std::{
+    fmt::{self, Display, Formatter, Write},
+    ops::Deref,
+};
 
 use num_traits::Zero;
+
+use crate::{
+    cidr::{Ipv6Able, Ipv6Cidr},
+    num_bigint::BigUint,
+};
 
 /// To combine multiple IPv6 CIDRs to supernetworks.
 #[derive(Debug)]
@@ -17,7 +21,7 @@ impl Ipv6CidrCombiner {
     /// Create a new `Ipv6CidrCombiner` instance.
     pub fn new() -> Ipv6CidrCombiner {
         Ipv6CidrCombiner {
-            cidr_array: Vec::new(),
+            cidr_array: Vec::new()
         }
     }
 
@@ -25,7 +29,7 @@ impl Ipv6CidrCombiner {
     /// Create a new `Ipv6CidrCombiner` instance with a specific capacity.
     pub fn with_capacity(capacity: usize) -> Ipv6CidrCombiner {
         Ipv6CidrCombiner {
-            cidr_array: Vec::with_capacity(capacity),
+            cidr_array: Vec::with_capacity(capacity)
         }
     }
 
@@ -33,7 +37,7 @@ impl Ipv6CidrCombiner {
     #[inline]
     pub unsafe fn from_ipv6_cidr_vec_unchecked(cidr_vec: Vec<Ipv6Cidr>) -> Ipv6CidrCombiner {
         Ipv6CidrCombiner {
-            cidr_array: cidr_vec,
+            cidr_array: cidr_vec
         }
     }
 

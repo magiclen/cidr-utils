@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 
-use crate::cidr::Ipv4Cidr;
-use crate::utils::Ipv4CidrCombiner;
+use crate::{cidr::Ipv4Cidr, utils::Ipv4CidrCombiner};
 
 /// To divide an IPv4 CIDR into subnetworks.
 #[derive(Debug)]

@@ -1,10 +1,8 @@
 use std::cmp::Ordering;
 
-use crate::cidr::Ipv6Cidr;
-use crate::num_bigint::BigUint;
-use crate::utils::Ipv6CidrCombiner;
-
 use num_traits::{One, ToPrimitive};
+
+use crate::{cidr::Ipv6Cidr, num_bigint::BigUint, utils::Ipv6CidrCombiner};
 
 /// To divide an IPv6 CIDR into subnetworks.
 #[derive(Debug)]

@@ -1,9 +1,13 @@
-use std::fmt::{self, Display, Formatter, Write};
-use std::net::IpAddr;
+use std::{
+    fmt::{self, Display, Formatter, Write},
+    net::IpAddr,
+};
 
-use crate::cidr::{IpCidr, Ipv4Cidr, Ipv6Cidr};
-use crate::num_bigint::BigUint;
-use crate::utils::{Ipv4CidrCombiner, Ipv6CidrCombiner};
+use crate::{
+    cidr::{IpCidr, Ipv4Cidr, Ipv6Cidr},
+    num_bigint::BigUint,
+    utils::{Ipv4CidrCombiner, Ipv6CidrCombiner},
+};
 
 /// To combine multiple IPv4 CIDRs and IPv6 CIDRs to supernetworks.
 #[derive(Debug)]
@@ -17,8 +21,7 @@ impl IpCidrCombiner {
     /// Create a new `IpCidrCombiner` instance.
     pub fn new() -> IpCidrCombiner {
         IpCidrCombiner {
-            ipv4: Ipv4CidrCombiner::new(),
-            ipv6: Ipv6CidrCombiner::new(),
+            ipv4: Ipv4CidrCombiner::new(), ipv6: Ipv6CidrCombiner::new()
         }
     }
 
@@ -72,10 +75,10 @@ impl IpCidrCombiner {
         match cidr {
             IpCidr::V4(cidr) => {
                 self.ipv4.push(cidr);
-            }
+            },
             IpCidr::V6(cidr) => {
                 self.ipv6.push(cidr);
-            }
+            },
         }
     }
 
@@ -89,14 +92,14 @@ impl IpCidrCombiner {
                         return true;
                     }
                 }
-            }
+            },
             IpAddr::V6(ipv6) => {
                 for cidr in self.ipv6.iter() {
                     if cidr.contains(ipv6) {
                         return true;
                     }
                 }
-            }
+            },
         }
 
         false

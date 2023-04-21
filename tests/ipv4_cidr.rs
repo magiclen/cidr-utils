@@ -1,6 +1,6 @@
+use std::{cmp::Ordering, net::Ipv4Addr};
+
 use cidr_utils::cidr::Ipv4Cidr;
-use std::cmp::Ordering;
-use std::net::Ipv4Addr;
 
 #[test]
 fn from_prefix_and_mask() {

@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
-use cidr_utils::num_bigint::BigUint;
-use cidr_utils::{cidr::Ipv6Cidr, utils::Ipv6CidrSeparator};
+use cidr_utils::{cidr::Ipv6Cidr, num_bigint::BigUint, utils::Ipv6CidrSeparator};
 
 #[test]
 fn divide_by() {

@@ -1,11 +1,9 @@
 use std::net::Ipv6Addr;
 
-use crate::num_bigint::BigUint;
-
 use num_traits::{One, ToPrimitive, Zero};
 
-use super::functions::*;
-use super::Ipv6Cidr;
+use super::{functions::*, Ipv6Cidr};
+use crate::num_bigint::BigUint;
 
 // TODO: Ipv6CidrU8ArrayIterator
 

@@ -27,11 +27,7 @@ pub(in crate::cidr::v6) fn mask_to_bits(mask: u128) -> Option<u8> {
 
         if digit == 1 {
             // check digit = 0
-            return if mask & 1 == 1 {
-                Some(128)
-            } else {
-                Some(127)
-            };
+            return if mask & 1 == 1 { Some(128) } else { Some(127) };
         }
 
         digit -= 1;
