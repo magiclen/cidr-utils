@@ -228,9 +228,9 @@ impl<'de> Deserialize<'de> for IpCidr {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
             D: Deserializer<'de>, {
-        struct Ipv4Visitor;
+        struct IpVisitor;
 
-        impl<'de> Visitor<'de> for Ipv4Visitor {
+        impl<'de> Visitor<'de> for IpVisitor {
             type Value = IpCidr;
 
             #[inline]
@@ -246,6 +246,6 @@ impl<'de> Deserialize<'de> for IpCidr {
             }
         }
 
-        deserializer.deserialize_str(Ipv4Visitor)
+        deserializer.deserialize_str(IpVisitor)
     }
 }
