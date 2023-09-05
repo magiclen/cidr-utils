@@ -205,3 +205,47 @@ impl TryFrom<&str> for IpCidr {
         IpCidr::from_str(s)
     }
 }
+
+
+#[cfg(feature = "serde")]
+use serde::de::{Deserialize, Deserializer, Error as DeError, Visitor};
+#[cfg(feature = "serde")]
+use serde::ser::{Serialize, Serializer};
+
+#[cfg(feature = "serde")]
+impl Serialize for IpCidr {
+    #[inline]
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer, {
+        serializer.serialize_str(self.to_string().as_str())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for IpCidr {
+    #[inline]
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>, {
+        struct Ipv4Visitor;
+
+        impl<'de> Visitor<'de> for Ipv4Visitor {
+            type Value = IpCidr;
+
+            #[inline]
+            fn expecting(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+                f.write_str("a CIDR string")
+            }
+
+            #[inline]
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                where
+                    E: DeError, {
+                IpCidr::from_str(v).map_err(DeError::custom)
+            }
+        }
+
+        deserializer.deserialize_str(Ipv4Visitor)
+    }
+}
