@@ -13,7 +13,7 @@ impl IpCidrSeparator {
         match cidr {
             IpCidr::V4(cidr) => Ipv4CidrSeparator::divide_by(cidr, n).map(|v| {
                 v.into_iter()
-                    .map(|combiner| unsafe {
+                    .map(|combiner| {
                         IpCidrCombiner::from_cidr_vec_unchecked(
                             combiner.into_ipv4_cidr_vec(),
                             vec![],
@@ -23,7 +23,7 @@ impl IpCidrSeparator {
             }),
             IpCidr::V6(cidr) => Ipv6CidrSeparator::divide_by(cidr, n).map(|v| {
                 v.into_iter()
-                    .map(|combiner| unsafe {
+                    .map(|combiner| {
                         IpCidrCombiner::from_cidr_vec_unchecked(
                             vec![],
                             combiner.into_ipv6_cidr_vec(),

@@ -34,9 +34,21 @@ impl IpCidrCombiner {
         }
     }
 
-    #[allow(clippy::missing_safety_doc)]
+    /// Constructs a new `IpCidrCombiner` from lists of potentially-overlapping IP ranges.
     #[inline]
-    pub unsafe fn from_cidr_vec_unchecked(
+    pub fn from_cidr_vec(
+        ipv4_cidr_vec: Vec<Ipv4Cidr>,
+        ipv6_cidr_vec: Vec<Ipv6Cidr>,
+    ) -> IpCidrCombiner {
+        IpCidrCombiner {
+            ipv4: Ipv4CidrCombiner::from_ipv4_cidr_vec(ipv4_cidr_vec),
+            ipv6: Ipv6CidrCombiner::from_ipv6_cidr_vec(ipv6_cidr_vec),
+        }
+    }
+
+    /// Constructs a new `IpCidrCombiner` from lists of non-overlapping IP ranges.
+    #[inline]
+    pub fn from_cidr_vec_unchecked(
         ipv4_cidr_vec: Vec<Ipv4Cidr>,
         ipv6_cidr_vec: Vec<Ipv6Cidr>,
     ) -> IpCidrCombiner {

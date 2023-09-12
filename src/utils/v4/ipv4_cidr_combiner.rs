@@ -28,9 +28,19 @@ impl Ipv4CidrCombiner {
         }
     }
 
-    #[allow(clippy::missing_safety_doc)]
+    /// Constructs a new `Ipv4CidrCombiner` from a list of potentially-overlapping IPv4 ranges.
     #[inline]
-    pub unsafe fn from_ipv4_cidr_vec_unchecked(cidr_vec: Vec<Ipv4Cidr>) -> Ipv4CidrCombiner {
+    pub fn from_ipv4_cidr_vec(cidr_vec: Vec<Ipv4Cidr>) -> Self {
+        let combiner = Self::with_capacity(cidr_vec.len());
+        cidr_vec.into_iter().fold(combiner, |mut combiner, cidr| {
+            combiner.push(cidr);
+            combiner
+        })
+    }
+
+    /// Constructs a new `Ipv4CidrCombiner` from a list of non-overlapping IPv4 ranges.
+    #[inline]
+    pub fn from_ipv4_cidr_vec_unchecked(cidr_vec: Vec<Ipv4Cidr>) -> Ipv4CidrCombiner {
         Ipv4CidrCombiner {
             cidr_array: cidr_vec
         }
