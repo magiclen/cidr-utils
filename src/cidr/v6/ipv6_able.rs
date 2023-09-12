@@ -3,6 +3,7 @@ use std::net::Ipv6Addr;
 use super::functions::*;
 
 /// The type which can be taken as an IPv6 address.
+///
 /// *An `u128` value represents an IPv6 byte array (`[u8; 16]`) in big-endian (BE) order.*
 pub trait Ipv6Able {
     fn get_u128(&self) -> u128;

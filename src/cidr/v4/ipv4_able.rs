@@ -1,6 +1,7 @@
 use std::net::Ipv4Addr;
 
 /// The type which can be taken as an IPv4 address.
+///
 /// *An `u32` value represents an IPv4 byte array (`[u8; 4]`) in big-endian (BE) order.*
 pub trait Ipv4Able {
     fn get_u32(&self) -> u32;

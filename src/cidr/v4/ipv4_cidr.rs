@@ -27,8 +27,8 @@ pub struct Ipv4Cidr {
 }
 
 impl Ipv4Cidr {
+    /// Returns an integer which represents the prefix an IPv4 byte array of this CIDR in big-endian (BE) order.
     #[inline]
-    /// Get an integer which represents the prefix an IPv4 byte array of this CIDR in big-endian (BE) order.
     pub fn get_prefix(&self) -> u32 {
         self.prefix
     }
@@ -40,9 +40,7 @@ impl Ipv4Cidr {
 
     #[inline]
     pub fn get_prefix_as_ipv4_addr(&self) -> Ipv4Addr {
-        let a = self.get_prefix_as_u8_array();
-
-        Ipv4Addr::new(a[0], a[1], a[2], a[3])
+        Ipv4Addr::from(self.get_prefix_as_u8_array())
     }
 
     #[inline]
@@ -50,8 +48,8 @@ impl Ipv4Cidr {
         mask_to_bits(self.mask).unwrap()
     }
 
+    /// Returns an integer which represents the mask an IPv4 byte array of this CIDR in big-endian (BE) order.
     #[inline]
-    /// Get an integer which represents the mask an IPv4 byte array of this CIDR in big-endian (BE) order.
     pub fn get_mask(&self) -> u32 {
         get_mask(self.get_bits())
     }
@@ -63,9 +61,7 @@ impl Ipv4Cidr {
 
     #[inline]
     pub fn get_mask_as_ipv4_addr(&self) -> Ipv4Addr {
-        let a = self.get_mask_as_u8_array();
-
-        Ipv4Addr::new(a[0], a[1], a[2], a[3])
+        Ipv4Addr::from(self.get_mask_as_u8_array())
     }
 }
 
@@ -177,40 +173,55 @@ impl Ipv4Cidr {
 }
 
 impl Ipv4Cidr {
+    /// Returns the first IPv4 address in this CIDR range as a big-endian (BE) integer.
     #[inline]
-    /// Get an integer which represents the first IPv4 byte array of this CIDR in big-endian (BE) order.
     pub fn first(&self) -> u32 {
         self.get_prefix()
     }
 
+    /// Returns the first IPv4 address in this CIDR range as a big-endian byte-array.
     #[inline]
     pub fn first_as_u8_array(&self) -> [u8; 4] {
         self.get_prefix_as_u8_array()
     }
 
+    /// Returns the first IPv4 address in this CIDR range.
     #[inline]
     pub fn first_as_ipv4_addr(&self) -> Ipv4Addr {
         self.get_prefix_as_ipv4_addr()
     }
 
+    /// Returns the last IPv4 address in this CIDR range as a big-endian (BE) integer.
     #[inline]
-    /// Get an integer which represents the last IPv4 byte array of this CIDR in big-endian (BE) order.
     pub fn last(&self) -> u32 {
         !self.get_mask() | self.get_prefix()
     }
 
+    /// Returns the last IPv4 address in this CIDR range as a big-endian byte-array.
     #[inline]
     pub fn last_as_u8_array(&self) -> [u8; 4] {
         self.last().to_be_bytes()
     }
 
+    /// Returns the last IPv4 address in this CIDR range.
     #[inline]
     pub fn last_as_ipv4_addr(&self) -> Ipv4Addr {
-        let a = self.last_as_u8_array();
-
-        Ipv4Addr::new(a[0], a[1], a[2], a[3])
+        Ipv4Addr::from(self.last_as_u8_array())
     }
 
+    /// Returns number of IPs in this CIDR range.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::net::IpAddr;
+    /// # use cidr_utils::{num_bigint::BigUint, cidr::Ipv4Cidr};
+    /// let cidr = "192.168.1.0/24".parse::<Ipv4Cidr>().unwrap();
+    /// assert_eq!(cidr.size(), 256);
+    ///
+    /// let cidr = "0.0.0.0/0".parse::<Ipv4Cidr>().unwrap();
+    /// assert_eq!(cidr.size(), 2u64.pow(32));
+    /// ```
     #[inline]
     pub fn size(&self) -> u64 {
         2u64.pow(u32::from(32 - self.get_bits()))

@@ -62,6 +62,7 @@ impl DoubleEndedIterator for IpCidrIpAddrIterator {
 }
 
 impl IpCidr {
+    /// Returns iterator over the IP addresses in this CIDR range.
     #[inline]
     pub fn iter_as_ip_addr(&self) -> IpCidrIpAddrIterator {
         match self {
@@ -74,6 +75,7 @@ impl IpCidr {
         }
     }
 
+    /// Returns iterator over the IP addresses in this CIDR range.
     #[inline]
     pub fn iter(&self) -> IpCidrIpAddrIterator {
         self.iter_as_ip_addr()

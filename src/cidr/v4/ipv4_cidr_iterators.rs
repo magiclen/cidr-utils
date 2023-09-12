@@ -2,8 +2,6 @@ use std::net::Ipv4Addr;
 
 use super::Ipv4Cidr;
 
-// TODO: Ipv4CidrU8ArrayIterator
-
 /// To iterate IPv4 CIDRs.
 #[derive(Debug)]
 pub struct Ipv4CidrU8ArrayIterator {
@@ -217,7 +215,7 @@ pub struct Ipv4CidrIpv4AddrIterator {
 impl Ipv4CidrIpv4AddrIterator {
     #[inline]
     pub fn nth_u64(&mut self, n: u64) -> Option<Ipv4Addr> {
-        self.iter.nth_u64(n).map(|a| Ipv4Addr::new(a[0], a[1], a[2], a[3]))
+        self.iter.nth_u64(n).map(Ipv4Addr::from)
     }
 }
 
@@ -226,29 +224,29 @@ impl Iterator for Ipv4CidrIpv4AddrIterator {
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|a| Ipv4Addr::new(a[0], a[1], a[2], a[3]))
+        self.iter.next().map(Ipv4Addr::from)
     }
 
     #[inline]
     fn last(self) -> Option<Self::Item> {
-        self.iter.last().map(|a| Ipv4Addr::new(a[0], a[1], a[2], a[3]))
+        self.iter.last().map(Ipv4Addr::from)
     }
 
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.iter.nth(n).map(|a| Ipv4Addr::new(a[0], a[1], a[2], a[3]))
+        self.iter.nth(n).map(Ipv4Addr::from)
     }
 }
 
 impl DoubleEndedIterator for Ipv4CidrIpv4AddrIterator {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.iter.next_back().map(|a| Ipv4Addr::new(a[0], a[1], a[2], a[3]))
+        self.iter.next_back().map(Ipv4Addr::from)
     }
 
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-        self.iter.nth_back(n).map(|a| Ipv4Addr::new(a[0], a[1], a[2], a[3]))
+        self.iter.nth_back(n).map(Ipv4Addr::from)
     }
 }
 

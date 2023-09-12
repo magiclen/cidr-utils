@@ -305,8 +305,6 @@ impl Ipv6Cidr {
     }
 }
 
-// TODO: Ipv6CidrIpv6AddrIterator
-
 /// To iterate IPv4 CIDRs.
 #[derive(Debug)]
 pub struct Ipv6CidrIpv6AddrIterator {
@@ -316,16 +314,12 @@ pub struct Ipv6CidrIpv6AddrIterator {
 impl Ipv6CidrIpv6AddrIterator {
     #[inline]
     pub fn nth_big_int(&mut self, n: BigUint) -> Option<Ipv6Addr> {
-        self.iter
-            .nth_big_uint(n)
-            .map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+        self.iter.nth_big_uint(n).map(Ipv6Addr::from)
     }
 
     #[inline]
     pub fn nth_back_big_int(&mut self, n: BigUint) -> Option<Ipv6Addr> {
-        self.iter
-            .nth_back_big_uint(n)
-            .map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+        self.iter.nth_back_big_uint(n).map(Ipv6Addr::from)
     }
 }
 
@@ -334,29 +328,29 @@ impl Iterator for Ipv6CidrIpv6AddrIterator {
 
     #[inline]
     fn next(&mut self) -> Option<Ipv6Addr> {
-        self.iter.next().map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+        self.iter.next().map(Ipv6Addr::from)
     }
 
     #[inline]
     fn last(self) -> Option<Ipv6Addr> {
-        self.iter.last().map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+        self.iter.last().map(Ipv6Addr::from)
     }
 
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Ipv6Addr> {
-        self.iter.nth(n).map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+        self.iter.nth(n).map(Ipv6Addr::from)
     }
 }
 
 impl DoubleEndedIterator for Ipv6CidrIpv6AddrIterator {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.iter.next_back().map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+        self.iter.next_back().map(Ipv6Addr::from)
     }
 
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-        self.iter.nth_back(n).map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+        self.iter.nth_back(n).map(Ipv6Addr::from)
     }
 }
 

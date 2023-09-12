@@ -46,9 +46,7 @@ impl Ipv6Cidr {
 
     #[inline]
     pub fn get_prefix_as_ipv6_addr(&self) -> Ipv6Addr {
-        let a = self.get_prefix_as_u16_array();
-
-        Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7])
+        Ipv6Addr::from(self.get_prefix_as_u8_array())
     }
 
     #[inline]
@@ -74,9 +72,7 @@ impl Ipv6Cidr {
 
     #[inline]
     pub fn get_mask_as_ipv6_addr(&self) -> Ipv6Addr {
-        let a = self.get_mask_as_u16_array();
-
-        Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7])
+        Ipv6Addr::from(self.get_mask_as_u8_array())
     }
 }
 
@@ -145,50 +141,68 @@ impl Ipv6Cidr {
 }
 
 impl Ipv6Cidr {
+    /// Returns the first IPv6 address in this CIDR range as a big-endian (BE) integer.
     #[inline]
-    /// Get an integer which represents the first IPv6 byte array of this CIDR in big-endian (BE) order.
     pub fn first(&self) -> u128 {
         self.get_prefix()
     }
 
+    /// Returns the first IPv6 address in this CIDR range as a big-endian byte-array.
     #[inline]
     pub fn first_as_u8_array(&self) -> [u8; 16] {
         self.get_prefix_as_u8_array()
     }
 
+    /// Returns the first IPv6 address in this CIDR range as a big-endian array of `u16`s.
     #[inline]
     pub fn first_as_u16_array(&self) -> [u16; 8] {
         self.get_prefix_as_u16_array()
     }
 
+    /// Returns the first IPv6 address in this CIDR range.
     #[inline]
     pub fn first_as_ipv6_addr(&self) -> Ipv6Addr {
         self.get_prefix_as_ipv6_addr()
     }
 
+    /// Returns the last IPv6 address in this CIDR range as a big-endian (BE) integer.
     #[inline]
-    /// Get an integer which represents the last IPv6 byte array of this CIDR in big-endian (BE) order.
     pub fn last(&self) -> u128 {
         !self.get_mask() | self.get_prefix()
     }
 
+    /// Returns the last IPv6 address in this CIDR range as a big-endian byte-array.
     #[inline]
     pub fn last_as_u8_array(&self) -> [u8; 16] {
         self.last().to_be_bytes()
     }
 
+    /// Returns the last IPv6 address in this CIDR range as a big-endian array of `u16`s.
     #[inline]
     pub fn last_as_u16_array(&self) -> [u16; 8] {
         u128_to_u16_array(self.last())
     }
 
+    /// Returns the last IPv6 address in this CIDR range.
     #[inline]
     pub fn last_as_ipv6_addr(&self) -> Ipv6Addr {
-        let a = self.last_as_u16_array();
-
-        Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7])
+        Ipv6Addr::from(self.last_as_u8_array())
     }
 
+    /// Returns number of IPs in this CIDR range.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::net::IpAddr;
+    /// # use cidr_utils::{num_bigint::BigUint, cidr::Ipv6Cidr};
+    /// let cidr = "2001:4f8:3:ba::/64".parse::<Ipv6Cidr>().unwrap();
+    /// assert_eq!(cidr.size(), BigUint::from(2u8).pow(64));
+    ///
+    /// let cidr =
+    ///     "2001:4f8:3:ba:2e0:81ff:fe22:d1f1/128".parse::<Ipv6Cidr>().unwrap();
+    /// assert_eq!(cidr.size(), BigUint::from(1u64));
+    /// ```
     #[inline]
     pub fn size(&self) -> BigUint {
         BigUint::from(2u8).pow(u32::from(128 - self.get_bits()))

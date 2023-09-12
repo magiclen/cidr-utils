@@ -14,7 +14,7 @@ use serde::ser::{Serialize, Serializer};
 use super::{IpCidrError, Ipv4Cidr, Ipv4CidrError, Ipv6Cidr, Ipv6CidrError};
 use crate::num_bigint::BigUint;
 
-// The type which can be taken as an IP address.
+/// Represents a range of v4 or v6 IP addresses.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum IpCidr {
     V4(Ipv4Cidr),
@@ -45,23 +45,25 @@ impl IpCidr {
         }
     }
 
+    /// Returns true if `s` parses as a valid CIDR range.
     #[inline]
     pub fn is_ip_cidr<S: AsRef<str>>(s: S) -> bool {
         Self::from_str(s).is_ok()
     }
 
+    /// Returns true if `s` parses as a valid IPv4 CIDR range.
     #[inline]
     pub fn is_ipv4_cidr<S: AsRef<str>>(s: S) -> bool {
         Ipv4Cidr::from_str(s).is_ok()
     }
 
+    /// Returns true if `s` parses as a valid IPv6 CIDR range.
     #[inline]
     pub fn is_ipv6_cidr<S: AsRef<str>>(s: S) -> bool {
         Ipv6Cidr::from_str(s).is_ok()
     }
-}
 
-impl IpCidr {
+    /// Returns first IP address in this CIDR range.
     #[inline]
     pub fn first_as_ip_addr(&self) -> IpAddr {
         match self {
@@ -70,6 +72,7 @@ impl IpCidr {
         }
     }
 
+    /// Returns last IP address in this CIDR range.
     #[inline]
     pub fn last_as_ip_addr(&self) -> IpAddr {
         match self {
@@ -78,6 +81,26 @@ impl IpCidr {
         }
     }
 
+    /// Returns number of IPs in this CIDR range.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::net::IpAddr;
+    /// # use cidr_utils::{num_bigint::BigUint, cidr::IpCidr};
+    /// let cidr = "192.168.1.0/24".parse::<IpCidr>().unwrap();
+    /// assert_eq!(cidr.size(), BigUint::from(256u64));
+    ///
+    /// let cidr = "0.0.0.0/0".parse::<IpCidr>().unwrap();
+    /// assert_eq!(cidr.size(), BigUint::from(2u64).pow(32));
+    ///
+    /// let cidr = "2001:4f8:3:ba::/64".parse::<IpCidr>().unwrap();
+    /// assert_eq!(cidr.size(), BigUint::from(2u8).pow(64));
+    ///
+    /// let cidr =
+    ///     "2001:4f8:3:ba:2e0:81ff:fe22:d1f1/128".parse::<IpCidr>().unwrap();
+    /// assert_eq!(cidr.size(), BigUint::from(1u64));
+    /// ```
     #[inline]
     pub fn size(&self) -> BigUint {
         match self {
@@ -85,9 +108,18 @@ impl IpCidr {
             IpCidr::V6(cidr) => cidr.size(),
         }
     }
-}
 
-impl IpCidr {
+    /// Returns true if `ip` is covered by this CIDR range.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::net::IpAddr;
+    /// # use cidr_utils::cidr::IpCidr;
+    /// let cidr = "192.168.51.0/24".parse::<IpCidr>().unwrap();
+    /// assert!(cidr.contains(IpAddr::from([192, 168, 51, 103])));
+    /// assert!(!cidr.contains(IpAddr::from([192, 168, 1, 1])));
+    /// ```
     #[inline]
     pub fn contains(&self, ip: IpAddr) -> bool {
         match self {
@@ -233,7 +265,7 @@ impl<'de> Deserialize<'de> for IpCidr {
             type Value = IpCidr;
 
             #[inline]
-            fn expecting(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+            fn expecting(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
                 f.write_str("a CIDR string")
             }
 
