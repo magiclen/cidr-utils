@@ -1,3 +1,5 @@
+#![cfg(feature = "separator")]
+
 use std::str::FromStr;
 
 use cidr::Ipv6Cidr;
