@@ -1,4 +1,9 @@
-use cidr_utils::{cidr::Ipv6Cidr, utils::Ipv6CidrCombiner};
+#![cfg(feature = "combiner")]
+
+use core::str::FromStr;
+
+use cidr::Ipv6Cidr;
+use cidr_utils::combiner::Ipv6CidrCombiner;
 
 #[test]
 fn simple_test() {
@@ -22,5 +27,5 @@ fn should_combine_same_ip() {
     combiner.push(Ipv6Cidr::from_str("::ffff:192.168.1.100").unwrap());
 
     assert_eq!(1, combiner.len());
-    assert_eq!("::ffff:192.168.1.100/128", combiner[0].to_string());
+    assert_eq!("::ffff:192.168.1.100", combiner[0].to_string());
 }

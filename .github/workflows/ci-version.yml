@@ -22,7 +22,9 @@ jobs:
           - nightly
         features:
           -
-          - --features serde
+          - --no-default-features
+          - --features combiner
+          - --features separator
     name: Test ${{ matrix.toolchain }} on ${{ matrix.os }} (${{ matrix.features }})
     runs-on: ${{ matrix.os }}
     steps:
@@ -45,7 +47,9 @@ jobs:
           - 1.58
         features:
           -
-          - --features serde
+          - --no-default-features
+          - --features combiner
+          - --features separator
     name: Test ${{ matrix.toolchain }} on ${{ matrix.os }} (${{ matrix.features }})
     runs-on: ${{ matrix.os }}
     steps:

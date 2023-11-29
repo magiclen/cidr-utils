@@ -1,8 +1,10 @@
 use std::cmp::Ordering;
 
+use cidr::Ipv6Cidr;
+use num_bigint::BigUint;
 use num_traits::{One, ToPrimitive};
 
-use crate::{cidr::Ipv6Cidr, num_bigint::BigUint, utils::Ipv6CidrCombiner};
+use crate::{combiner::Ipv6CidrCombiner, iterator::Ipv6CidrIpv6AddrIterator, Ipv6CidrSize};
 
 /// To divide an IPv6 CIDR into subnetworks.
 #[derive(Debug)]
@@ -25,24 +27,22 @@ impl Ipv6CidrSeparator {
             return Some(vec![combiner]);
         }
 
-        let log2_n = (n as f64).log2();
+        let d = size.clone() / n_big_int.clone();
 
         let mut output = Vec::with_capacity(n);
 
-        if (log2_n - log2_n.floor()).abs() < 2.0 * std::f64::EPSILON {
-            let mut iter = cidr.iter();
+        if d.clone() * n_big_int == size {
+            let mut iter = Ipv6CidrIpv6AddrIterator::new(cidr);
 
-            let bits = cidr.get_bits() + log2_n as u8;
+            let bits = cidr.network_length() + n.ilog2() as u8;
 
             let usize_max_big_int = BigUint::from(usize::MAX);
-
-            let d = size / n_big_int;
 
             if d <= usize_max_big_int {
                 for ip in iter.step_by(d.to_usize().unwrap()) {
                     let mut combiner = Ipv6CidrCombiner::with_capacity(1);
 
-                    combiner.push(Ipv6Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                    combiner.push(Ipv6Cidr::new(ip, bits).unwrap());
 
                     output.push(combiner);
                 }
@@ -52,30 +52,28 @@ impl Ipv6CidrSeparator {
                 if let Some(ip) = iter.next() {
                     let mut combiner = Ipv6CidrCombiner::with_capacity(1);
 
-                    combiner.push(Ipv6Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                    combiner.push(Ipv6Cidr::new(ip, bits).unwrap());
 
                     output.push(combiner);
 
                     while let Some(ip) = iter.nth_big_uint(nth.clone()) {
                         let mut combiner = Ipv6CidrCombiner::with_capacity(1);
 
-                        combiner.push(Ipv6Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                        combiner.push(Ipv6Cidr::new(ip, bits).unwrap());
 
                         output.push(combiner);
                     }
                 }
             }
         } else {
-            let d = size / n_big_int;
-
-            let iter = cidr.iter();
+            let iter = Ipv6CidrIpv6AddrIterator::new(cidr);
 
             let mut current_combiner = Ipv6CidrCombiner::new();
 
             let mut i = BigUint::one();
 
             for ip in iter {
-                current_combiner.push(Ipv6Cidr::from_prefix_and_bits(ip, 128).unwrap());
+                current_combiner.push(Ipv6Cidr::new(ip, 128).unwrap());
 
                 if i == d {
                     output.push(current_combiner);
@@ -100,7 +98,7 @@ impl Ipv6CidrSeparator {
 
     /// Divide an IPv6 CIDR into subnetworks with a specific bits.
     pub fn sub_networks(cidr: &Ipv6Cidr, bits: u8) -> Option<Vec<Ipv6Cidr>> {
-        let cidr_bits = cidr.get_bits();
+        let cidr_bits = cidr.network_length();
 
         match cidr_bits.cmp(&bits) {
             Ordering::Greater => return None,
@@ -118,22 +116,22 @@ impl Ipv6CidrSeparator {
 
         let d = size / n_big_int;
 
-        let mut iter = cidr.iter();
+        let mut iter = Ipv6CidrIpv6AddrIterator::new(cidr);
 
         let usize_max_big_int = BigUint::from(usize::MAX);
 
         if d <= usize_max_big_int {
             for ip in iter.step_by(d.to_usize().unwrap()) {
-                output.push(Ipv6Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                output.push(Ipv6Cidr::new(ip, bits).unwrap());
             }
         } else {
             let nth = d - BigUint::one();
 
             if let Some(ip) = iter.next() {
-                output.push(Ipv6Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                output.push(Ipv6Cidr::new(ip, bits).unwrap());
 
                 while let Some(ip) = iter.nth_big_uint(nth.clone()) {
-                    output.push(Ipv6Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                    output.push(Ipv6Cidr::new(ip, bits).unwrap());
                 }
             }
         }

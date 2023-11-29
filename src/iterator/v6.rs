@@ -1,9 +1,10 @@
 use std::net::Ipv6Addr;
 
+use cidr::Ipv6Cidr;
+use num_bigint::BigUint;
 use num_traits::{One, ToPrimitive, Zero};
 
-use super::{functions::*, Ipv6Cidr};
-use crate::num_bigint::BigUint;
+use crate::Ipv6CidrSize;
 
 // TODO: Ipv6CidrU8ArrayIterator
 
@@ -11,9 +12,24 @@ use crate::num_bigint::BigUint;
 #[derive(Debug)]
 pub struct Ipv6CidrU8ArrayIterator {
     from: u128,
+    size: BigUint,
     next: BigUint,
     back: BigUint,
-    size: BigUint,
+}
+
+impl Ipv6CidrU8ArrayIterator {
+    #[inline]
+    pub fn new(cidr: &Ipv6Cidr) -> Self {
+        let from: u128 = cidr.first_address().into();
+        let size = cidr.size();
+
+        Self {
+            from,
+            size: size.clone(),
+            next: BigUint::zero(),
+            back: size,
+        }
+    }
 }
 
 impl Ipv6CidrU8ArrayIterator {
@@ -109,21 +125,6 @@ impl DoubleEndedIterator for Ipv6CidrU8ArrayIterator {
     }
 }
 
-impl Ipv6Cidr {
-    #[inline]
-    pub fn iter_as_u8_array(&self) -> Ipv6CidrU8ArrayIterator {
-        let from = self.first();
-        let size = self.size();
-
-        Ipv6CidrU8ArrayIterator {
-            from,
-            next: BigUint::zero(),
-            back: size.clone(),
-            size,
-        }
-    }
-}
-
 // TODO: Ipv6CidrU8ArrayIterator
 
 /// To iterate IPv6 CIDRs.
@@ -133,6 +134,21 @@ pub struct Ipv6CidrU16ArrayIterator {
     next: BigUint,
     back: BigUint,
     size: BigUint,
+}
+
+impl Ipv6CidrU16ArrayIterator {
+    #[inline]
+    pub fn new(cidr: &Ipv6Cidr) -> Self {
+        let from: u128 = cidr.first_address().into();
+        let size = cidr.size();
+
+        Self {
+            from,
+            size: size.clone(),
+            next: BigUint::zero(),
+            back: size,
+        }
+    }
 }
 
 impl Ipv6CidrU16ArrayIterator {
@@ -228,27 +244,21 @@ impl DoubleEndedIterator for Ipv6CidrU16ArrayIterator {
     }
 }
 
-impl Ipv6Cidr {
-    #[inline]
-    pub fn iter_as_u16_array(&self) -> Ipv6CidrU16ArrayIterator {
-        let from = self.first();
-        let size = self.size();
-
-        Ipv6CidrU16ArrayIterator {
-            from,
-            next: BigUint::zero(),
-            back: size.clone(),
-            size,
-        }
-    }
-}
-
 // TODO: Ipv6CidrIterator
 
 /// To iterate IPv6 CIDRs.
 #[derive(Debug)]
 pub struct Ipv6CidrIterator {
     iter: Ipv6CidrU8ArrayIterator,
+}
+
+impl Ipv6CidrIterator {
+    #[inline]
+    pub fn new(cidr: &Ipv6Cidr) -> Self {
+        Self {
+            iter: Ipv6CidrU8ArrayIterator::new(cidr)
+        }
+    }
 }
 
 impl Ipv6CidrIterator {
@@ -294,17 +304,6 @@ impl DoubleEndedIterator for Ipv6CidrIterator {
     }
 }
 
-impl Ipv6Cidr {
-    #[inline]
-    pub fn iter(&self) -> Ipv6CidrIterator {
-        let iter = self.iter_as_u8_array();
-
-        Ipv6CidrIterator {
-            iter,
-        }
-    }
-}
-
 // TODO: Ipv6CidrIpv6AddrIterator
 
 /// To iterate IPv4 CIDRs.
@@ -315,7 +314,16 @@ pub struct Ipv6CidrIpv6AddrIterator {
 
 impl Ipv6CidrIpv6AddrIterator {
     #[inline]
-    pub fn nth_big_int(&mut self, n: BigUint) -> Option<Ipv6Addr> {
+    pub fn new(cidr: &Ipv6Cidr) -> Self {
+        Self {
+            iter: Ipv6CidrU16ArrayIterator::new(cidr)
+        }
+    }
+}
+
+impl Ipv6CidrIpv6AddrIterator {
+    #[inline]
+    pub fn nth_big_uint(&mut self, n: BigUint) -> Option<Ipv6Addr> {
         self.iter
             .nth_big_uint(n)
             .map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
@@ -360,13 +368,16 @@ impl DoubleEndedIterator for Ipv6CidrIpv6AddrIterator {
     }
 }
 
-impl Ipv6Cidr {
-    #[inline]
-    pub fn iter_as_ipv6_addr(&self) -> Ipv6CidrIpv6AddrIterator {
-        let iter = self.iter_as_u16_array();
+fn u128_to_u16_array(uint128: u128) -> [u16; 8] {
+    let a = uint128.to_be_bytes();
 
-        Ipv6CidrIpv6AddrIterator {
-            iter,
-        }
+    let mut o = [0; 8];
+
+    for (i, e) in o.iter_mut().enumerate() {
+        let ii = i * 2;
+
+        *e = a[ii] as u16 * 256 + a[ii + 1] as u16;
     }
+
+    o
 }

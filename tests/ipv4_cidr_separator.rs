@@ -1,4 +1,9 @@
-use cidr_utils::{cidr::Ipv4Cidr, utils::Ipv4CidrSeparator};
+#![cfg(feature = "separator")]
+
+use core::str::FromStr;
+
+use cidr::Ipv4Cidr;
+use cidr_utils::{separator::Ipv4CidrSeparator, Ipv4CidrSize};
 
 #[test]
 fn divide_by() {

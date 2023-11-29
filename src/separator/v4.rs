@@ -1,6 +1,8 @@
 use std::cmp::Ordering;
 
-use crate::{cidr::Ipv4Cidr, utils::Ipv4CidrCombiner};
+use cidr::Ipv4Cidr;
+
+use crate::{combiner::Ipv4CidrCombiner, iterator::Ipv4CidrIpv4AddrIterator, Ipv4CidrSize};
 
 /// To divide an IPv4 CIDR into subnetworks.
 #[derive(Debug)]
@@ -28,9 +30,9 @@ impl Ipv4CidrSeparator {
         let d = size / n_u64;
 
         if d * n_u64 == size {
-            let mut iter = cidr.iter();
+            let mut iter = Ipv4CidrIpv4AddrIterator::new(cidr);
 
-            let bits = cidr.get_bits() + (n as f64).log2() as u8;
+            let bits = cidr.network_length() + n.ilog2() as u8;
 
             let usize_max_u64 = usize::MAX as u64;
 
@@ -38,7 +40,7 @@ impl Ipv4CidrSeparator {
                 for ip in iter.step_by(d as usize) {
                     let mut combiner = Ipv4CidrCombiner::with_capacity(1);
 
-                    combiner.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                    combiner.push(Ipv4Cidr::new(ip, bits).unwrap());
 
                     output.push(combiner);
                 }
@@ -48,28 +50,28 @@ impl Ipv4CidrSeparator {
                 if let Some(ip) = iter.next() {
                     let mut combiner = Ipv4CidrCombiner::with_capacity(1);
 
-                    combiner.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                    combiner.push(Ipv4Cidr::new(ip, bits).unwrap());
 
                     output.push(combiner);
 
                     while let Some(ip) = iter.nth_u64(nth) {
                         let mut combiner = Ipv4CidrCombiner::with_capacity(1);
 
-                        combiner.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                        combiner.push(Ipv4Cidr::new(ip, bits).unwrap());
 
                         output.push(combiner);
                     }
                 }
             }
         } else {
-            let iter = cidr.iter();
+            let iter = Ipv4CidrIpv4AddrIterator::new(cidr);
 
             let mut current_combiner = Ipv4CidrCombiner::new();
 
             let mut i = 1;
 
             for ip in iter {
-                current_combiner.push(Ipv4Cidr::from_prefix_and_bits(ip, 32).unwrap());
+                current_combiner.push(Ipv4Cidr::new(ip, 32).unwrap());
 
                 if i == d {
                     output.push(current_combiner);
@@ -94,7 +96,7 @@ impl Ipv4CidrSeparator {
 
     /// Divide an IPv4 CIDR into subnetworks with a specific bits.
     pub fn sub_networks(cidr: &Ipv4Cidr, bits: u8) -> Option<Vec<Ipv4Cidr>> {
-        let cidr_bits = cidr.get_bits();
+        let cidr_bits = cidr.network_length();
 
         match cidr_bits.cmp(&bits) {
             Ordering::Greater => return None,
@@ -110,22 +112,22 @@ impl Ipv4CidrSeparator {
 
         let d = cidr.size() / n_u64;
 
-        let mut iter = cidr.iter();
+        let mut iter = Ipv4CidrIpv4AddrIterator::new(cidr);
 
         let usize_max_u64 = usize::MAX as u64;
 
         if d <= usize_max_u64 {
             for ip in iter.step_by(d as usize) {
-                output.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                output.push(Ipv4Cidr::new(ip, bits).unwrap());
             }
         } else {
             let nth = d - 1;
 
             if let Some(ip) = iter.next() {
-                output.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                output.push(Ipv4Cidr::new(ip, bits).unwrap());
 
-                while let Some(ip) = iter.nth_u64(nth) {
-                    output.push(Ipv4Cidr::from_prefix_and_bits(ip, bits).unwrap());
+                while let Some(ip) = iter.nth(nth as usize) {
+                    output.push(Ipv4Cidr::new(ip, bits).unwrap());
                 }
             }
         }
