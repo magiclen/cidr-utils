@@ -27,4 +27,4 @@ separator = ["combiner", "iterator"]
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs_1_92"]
