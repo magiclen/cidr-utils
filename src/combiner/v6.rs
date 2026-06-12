@@ -97,7 +97,7 @@ impl Ipv6CidrCombiner {
                             let next_bits = next_cidr.network_length();
                             let bits = cidr.network_length();
 
-                            if bits == next_bits {
+                            if bits > 0 && bits == next_bits {
                                 let next_prefix: u128 = next_cidr.first_address().into();
                                 let prefix: u128 = cidr.first_address().into();
 
@@ -121,7 +121,7 @@ impl Ipv6CidrCombiner {
                             let previous_bits = previous_cidr.network_length();
                             let bits = cidr.network_length();
 
-                            if bits == previous_bits {
+                            if bits > 0 && bits == previous_bits {
                                 let previous_prefix: u128 = previous_cidr.first_address().into();
                                 let prefix: u128 = cidr.first_address().into();
 

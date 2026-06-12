@@ -1,10 +1,10 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, net::Ipv6Addr};
 
 use cidr::Ipv6Cidr;
 use num_bigint::BigUint;
-use num_traits::{One, ToPrimitive};
+use num_traits::ToPrimitive;
 
-use crate::{combiner::Ipv6CidrCombiner, iterator::Ipv6CidrIpv6AddrIterator, Ipv6CidrSize};
+use crate::{combiner::Ipv6CidrCombiner, Ipv6CidrSize};
 
 /// To divide an IPv6 CIDR into subnetworks.
 #[derive(Debug)]
@@ -27,69 +27,23 @@ impl Ipv6CidrSeparator {
             return Some(vec![combiner]);
         }
 
-        let d = size.clone() / n_big_int.clone();
+        let d = &size / &n_big_int;
 
-        let mut output = Vec::with_capacity(n);
+        let mut output = Vec::new();
 
-        if d.clone() * n_big_int == size {
-            let mut iter = Ipv6CidrIpv6AddrIterator::new(cidr);
+        output.try_reserve_exact(n).ok()?;
 
-            let bits = cidr.network_length() + n.ilog2() as u8;
+        let mut next_address = cidr.first_address().to_bits();
+        let mut remaining_size = size;
 
-            let usize_max_big_int = BigUint::from(usize::MAX);
+        for index in 0..n {
+            let chunk_size = if index + 1 == n { remaining_size.to_u128()? } else { d.to_u128()? };
 
-            if d <= usize_max_big_int {
-                for ip in iter.step_by(d.to_usize().unwrap()) {
-                    let mut combiner = Ipv6CidrCombiner::with_capacity(1);
+            output.push(ipv6_cidr_combiner_from_range(next_address, chunk_size));
 
-                    combiner.push(Ipv6Cidr::new(ip, bits).unwrap());
-
-                    output.push(combiner);
-                }
-            } else {
-                let nth = d - BigUint::one();
-
-                if let Some(ip) = iter.next() {
-                    let mut combiner = Ipv6CidrCombiner::with_capacity(1);
-
-                    combiner.push(Ipv6Cidr::new(ip, bits).unwrap());
-
-                    output.push(combiner);
-
-                    while let Some(ip) = iter.nth_big_uint(nth.clone()) {
-                        let mut combiner = Ipv6CidrCombiner::with_capacity(1);
-
-                        combiner.push(Ipv6Cidr::new(ip, bits).unwrap());
-
-                        output.push(combiner);
-                    }
-                }
-            }
-        } else {
-            let iter = Ipv6CidrIpv6AddrIterator::new(cidr);
-
-            let mut current_combiner = Ipv6CidrCombiner::new();
-
-            let mut i = BigUint::one();
-
-            for ip in iter {
-                current_combiner.push(Ipv6Cidr::new(ip, 128).unwrap());
-
-                if i == d {
-                    output.push(current_combiner);
-
-                    current_combiner = Ipv6CidrCombiner::new();
-
-                    i = BigUint::one();
-                } else {
-                    i += BigUint::one();
-                }
-            }
-
-            let last_combiner = output.last_mut().unwrap();
-
-            for cidr in current_combiner.into_ipv6_cidr_vec().into_iter() {
-                last_combiner.push(cidr);
+            if index + 1 != n {
+                next_address = next_address.checked_add(chunk_size)?;
+                remaining_size -= &d;
             }
         }
 
@@ -100,42 +54,60 @@ impl Ipv6CidrSeparator {
     pub fn sub_networks(cidr: &Ipv6Cidr, bits: u8) -> Option<Vec<Ipv6Cidr>> {
         let cidr_bits = cidr.network_length();
 
+        if bits > 128 {
+            return None;
+        }
+
         match cidr_bits.cmp(&bits) {
             Ordering::Greater => return None,
             Ordering::Equal => return Some(vec![*cidr]),
             Ordering::Less => (),
         }
 
-        let n = 2usize.pow(u32::from(bits - cidr_bits));
+        let n = sub_network_count(bits - cidr_bits)?;
 
-        let n_big_int = BigUint::from(n);
+        let mut output = Vec::new();
 
-        let mut output = Vec::with_capacity(n);
+        output.try_reserve_exact(n).ok()?;
 
-        let size = cidr.size();
+        let step = 1u128.checked_shl((128 - bits) as u32)?;
+        let mut next_address = cidr.first_address().to_bits();
 
-        let d = size / n_big_int;
+        for index in 0..n {
+            output.push(Ipv6Cidr::new(Ipv6Addr::from(next_address), bits).unwrap());
 
-        let mut iter = Ipv6CidrIpv6AddrIterator::new(cidr);
-
-        let usize_max_big_int = BigUint::from(usize::MAX);
-
-        if d <= usize_max_big_int {
-            for ip in iter.step_by(d.to_usize().unwrap()) {
-                output.push(Ipv6Cidr::new(ip, bits).unwrap());
-            }
-        } else {
-            let nth = d - BigUint::one();
-
-            if let Some(ip) = iter.next() {
-                output.push(Ipv6Cidr::new(ip, bits).unwrap());
-
-                while let Some(ip) = iter.nth_big_uint(nth.clone()) {
-                    output.push(Ipv6Cidr::new(ip, bits).unwrap());
-                }
+            if index + 1 != n {
+                next_address = next_address.checked_add(step)?;
             }
         }
 
         Some(output)
     }
+}
+
+fn ipv6_cidr_combiner_from_range(mut next_address: u128, mut size: u128) -> Ipv6CidrCombiner {
+    let mut combiner = Ipv6CidrCombiner::new();
+
+    while size > 0 {
+        let alignment_bits = if next_address == 0 { 128 } else { next_address.trailing_zeros() };
+        let size_bits = 127 - size.leading_zeros();
+        let block_bits = alignment_bits.min(size_bits);
+        let block_size = 1u128 << block_bits;
+        let bits = 128 - block_bits as u8;
+
+        combiner.push(Ipv6Cidr::new(Ipv6Addr::from(next_address), bits).unwrap());
+
+        size -= block_size;
+
+        if size > 0 {
+            next_address += block_size;
+        }
+    }
+
+    combiner
+}
+
+#[inline]
+const fn sub_network_count(bits: u8) -> Option<usize> {
+    1usize.checked_shl(bits as u32)
 }

@@ -330,10 +330,16 @@ impl Ipv6CidrIpv6AddrIterator {
     }
 
     #[inline]
-    pub fn nth_back_big_int(&mut self, n: BigUint) -> Option<Ipv6Addr> {
+    pub fn nth_back_big_uint(&mut self, n: BigUint) -> Option<Ipv6Addr> {
         self.iter
             .nth_back_big_uint(n)
             .map(|a| Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+    }
+
+    #[deprecated(since = "2.7.0", note = "Use `nth_big_uint` instead")]
+    #[inline]
+    pub fn nth_back_big_int(&mut self, n: BigUint) -> Option<Ipv6Addr> {
+        self.nth_back_big_uint(n)
     }
 }
 

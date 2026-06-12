@@ -104,7 +104,7 @@ assert_eq!("192.168.56.192/26".to_string(), result[3].to_string());
 */
 
 #![allow(unexpected_cfgs)]
-#![cfg_attr(docsrs_1_92, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[cfg(feature = "combiner")]
 pub mod combiner;

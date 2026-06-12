@@ -95,7 +95,7 @@ impl Ipv4CidrCombiner {
                             let next_bits = next_cidr.network_length();
                             let bits = cidr.network_length();
 
-                            if bits == next_bits {
+                            if bits > 0 && bits == next_bits {
                                 let next_prefix: u32 = next_cidr.first_address().into();
                                 let prefix: u32 = cidr.first_address().into();
 
@@ -119,7 +119,7 @@ impl Ipv4CidrCombiner {
                             let previous_bits = previous_cidr.network_length();
                             let bits = cidr.network_length();
 
-                            if bits == previous_bits {
+                            if bits > 0 && bits == previous_bits {
                                 let previous_prefix: u32 = previous_cidr.first_address().into();
                                 let prefix: u32 = cidr.first_address().into();
 
